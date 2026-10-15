@@ -30,9 +30,9 @@ console.log("Test Suite 1: Manifest V3 & Branding Validation");
 const manifestPath = path.resolve(__dirname, "../manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
-it("manifest.json name is 'Notion Ding' and version is 2.1.0", () => {
+it("manifest.json name is 'Notion Ding' and version is 2.2.0", () => {
   assert.strictEqual(manifest.name, "Notion Ding");
-  assert.strictEqual(manifest.version, "2.1.0");
+  assert.strictEqual(manifest.version, "2.2.0");
 });
 
 it("manifest.json description is professional with no joke terminology", () => {
@@ -508,7 +508,7 @@ console.log("\nTest Suite 8: Releases Section & Distribution Verification");
 
 it("README.md contains the Releases section and links to notion-ding.crx", () => {
   const readme = fs.readFileSync(path.resolve(__dirname, "../README.md"), "utf8");
-  assert(readme.includes("## 📥 Releases & Downloads"), "README must contain the Releases & Downloads section");
+  assert(readme.includes("## Releases & Downloads"), "README must contain the Releases & Downloads section");
   assert(readme.includes("releases/notion-ding.crx"), "README must link to releases/notion-ding.crx");
   assert(readme.includes("releases/notion-ding.zip"), "README must link to releases/notion-ding.zip");
 });

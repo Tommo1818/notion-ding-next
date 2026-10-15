@@ -1,4 +1,4 @@
-# Notion Ding 🔔
+# Notion Ding
 
 > **A satisfying sound reward for your Notion to-do lists.**  
 > A lightweight Chrome extension that plays a crisp "ding" sound effect every time you complete a task or check a checkbox in Notion.
@@ -9,19 +9,21 @@
 
 ---
 
-## 📥 Releases & Downloads
+## Releases & Downloads
 
 Ready-to-use production packages are maintained in the [`releases/`](releases/) directory:
 
 | Package | Format | Description | Direct Download |
 | :--- | :--- | :--- | :--- |
-| **Notion Ding CRX** | `.crx` | Signed Chrome Extension package (instant drag & drop install) | [📥 **`releases/notion-ding.crx`**](releases/notion-ding.crx) |
-| **Notion Ding ZIP** | `.zip` | Clean production archive for one-click extraction or Chrome Web Store | [📦 **`releases/notion-ding.zip`**](releases/notion-ding.zip) |
-| **Staged Folder** | Directory | Staged production files ready for "Load unpacked" | [📂 **`dist/notion-ding/`**](dist/notion-ding/) |
+| **Notion Ding CRX** | `.crx` | Signed Chrome Extension package (instant drag & drop install) | [**`releases/notion-ding.crx`**](releases/notion-ding.crx) |
+| **Notion Ding ZIP** | `.zip` | Clean production archive for one-click extraction or Chrome Web Store | [**`releases/notion-ding.zip`**](releases/notion-ding.zip) |
+| **Staged Folder** | Directory | Staged production files ready for "Load unpacked" | [**`dist/notion-ding/`**](dist/notion-ding/) |
+
+Versioned, documented releases are published on the [GitHub Releases page](https://github.com/Tommo1818/notion-ding/releases) (current: **v2.2.0**).
 
 ---
 
-## 🚀 Installation Guide
+## Installation Guide
 
 You can install Notion Ding on Google Chrome, Microsoft Edge, Brave, Arc, or any Chromium-based browser using either method below:
 
@@ -42,41 +44,41 @@ You can install Notion Ding on Google Chrome, Microsoft Edge, Brave, Arc, or any
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎵 Sound Themes & Library
+### Sound Themes & Library
 Choose from 5 clean, distinct audio rewards in the popup:
-- **Classic Ding 🔔**: The original satisfying bell chime.
-- **Marimba Chime 🪵**: Warm, organic acoustic wooden chime.
-- **Subtle Pop 🫧**: Crisp, minimal iOS-style interface pop.
-- **Mechanical Switch ⌨️**: Tactile click inspired by mechanical keyboard switches.
-- **Zen Singing Bowl 🧘**: Calming, resonant meditation bell.
+- **Classic Ding**: The original satisfying bell chime.
+- **Marimba Chime**: Warm, organic acoustic wooden chime.
+- **Subtle Pop**: Crisp, minimal iOS-style interface pop.
+- **Mechanical Switch**: Tactile click inspired by mechanical keyboard switches.
+- **Zen Singing Bowl**: Calming, resonant meditation bell.
 
-### 🎶 Chromatic Scale Pitch Modulation (Combo Tasks)
+### Chromatic Scale Pitch Modulation (Combo Tasks)
 Completing tasks in rapid succession within 5 seconds steps the pitch up by **+1 semitone** ($2^{n/12}$) on a musical chromatic scale across a full octave (12 semitones). Checking off checklists feels like playing a melodic victory tune! (Can be toggled on/off in settings).
 
-### ✨ Completion Animations (Ripple & Micro Confetti)
+### Completion Animations (Ripple & Micro Confetti)
 Celebrate completing tasks directly on your Notion page:
-- **Subtle Ripple 🟢**: A sleek, translucent expanding ring centered directly on the checkbox.
-- **Micro Confetti 🎊**: A minimal, elegant burst of 14 colorful particles that gently drift and disperse.
+- **Subtle Ripple**: A sleek, translucent expanding ring centered directly on the checkbox.
+- **Micro Confetti**: A minimal, elegant burst of 12 colorful particles that gently drift and disperse.
 - **Customizable**: Choose between *Both*, *Ripple Only*, *Confetti Only*, or *Audio Only* in the popup settings.
 
-### 🔥 Daily Streaks & Productivity Statistics
+### Daily Streaks & Productivity Statistics
 - **All-Time Total**: Tracks every task you've completed.
 - **Today's Count**: Keeps count of tasks completed today.
-- **Daily Streak 🔥**: Automatically counts consecutive days of productivity.
+- **Daily Streak**: Automatically counts consecutive days of productivity.
 - **Reset Option**: Clear stats at any time with one click.
 
-### ⚡ Zero-Latency Web Audio API
+### Zero-Latency Web Audio API
 Pre-caches decoded audio buffers into memory using the browser's Web Audio API (`AudioContext`), ensuring zero-latency, instantaneous audio feedback with exponential auditory volume scaling.
 
-### 🌓 High-Contrast Notion-Native Theme
+### High-Contrast Notion-Native Theme
 - Automatically adapts to your system/Notion theme.
 - **High-contrast Dark Mode**: Custom styled SVG icons, slider tracks, badges, and cards engineered for crystal-clear readability against dark backgrounds.
 
 ---
 
-## 🔍 Why the Original "Notion Ding" Stopped Working
+## Why the Original "Notion Ding" Stopped Working
 
 If you used the original `lucasdellabella/notion-ding` extension, it broke due to:
 1. **Notion's Domain Migration**: Transition from `notion.so` to `notion.com` and `notion.site`.
@@ -84,11 +86,11 @@ If you used the original `lucasdellabella/notion-ding` extension, it broke due t
 3. **Unhandled DOM Exception**: The original script threw `TypeError: element.matches is not a function` during `composedPath()` traversal.
 4. **Manifest V3 Web Accessible Resources**: Modern Chrome extensions strictly enforce explicit resource matching in Manifest V3.
 
-**Notion Ding 2.1** resolves all of these issues with a multi-layered event engine, React reconciliation handling, and modern Manifest V3 compliance.
+**Notion Ding 2.2** resolves all of these issues with a multi-layered event engine, React reconciliation handling, and modern Manifest V3 compliance.
 
 ---
 
-## 🧪 Automated Testing
+## Automated Testing
 
 Run the automated test suite to verify the extension:
 ```bash
@@ -109,7 +111,7 @@ The test suite validates:
 
 ---
 
-## 📦 Building Fresh Release Packages
+## Building Fresh Release Packages
 
 To recompile fresh `.crx` and `.zip` packages at any time:
 ```bash

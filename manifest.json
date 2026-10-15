@@ -1,7 +1,7 @@
 {
   "name": "Notion Ding",
   "description": "Plays a satisfying sound effect whenever you complete a task or check a checkbox in Notion.",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "manifest_version": 3,
   "permissions": ["storage"],
   "content_scripts": [
