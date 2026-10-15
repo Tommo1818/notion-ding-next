@@ -30,9 +30,9 @@ console.log("Test Suite 1: Manifest V3 & Branding Validation");
 const manifestPath = path.resolve(__dirname, "../manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
-it("manifest.json name is 'Notion Ding Next' and version is 2.2.0", () => {
+it("manifest.json name is 'Notion Ding Next' and version is 2.3.0", () => {
   assert.strictEqual(manifest.name, "Notion Ding Next");
-  assert.strictEqual(manifest.version, "2.2.0");
+  assert.strictEqual(manifest.version, "2.3.0");
 });
 
 it("manifest.json description is professional with no joke terminology", () => {

@@ -19,7 +19,7 @@
 | **Notion Ding Next CRX** | A one-file version you drag into the browser. Quick when it works, but newer versions of Chrome often block it. | [**`releases/notion-ding-next.crx`**](releases/notion-ding-next.crx) |
 | **Staged folder** | The same files, already unzipped, for people who work with this project's code. | [**`dist/notion-ding-next/`**](dist/notion-ding-next/) |
 
-The current version is **v2.2.0**. Older versions are listed on the [GitHub Releases page](https://github.com/Tommo1818/notion-ding-next/releases).
+The current version is **v2.3.0**. Older versions are listed on the [GitHub Releases page](https://github.com/Tommo1818/notion-ding-next/releases).
 
 ---
 
