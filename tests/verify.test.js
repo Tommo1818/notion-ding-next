@@ -402,9 +402,109 @@ it("animation origin logic pins to the checkbox element rather than the center o
 });
 
 // ----------------------------------------------------
-// Test Group 7: Releases Section & CRX / ZIP Distribution Packages
+// Test Group 7: Interaction Scoping & Animation Anchoring
 // ----------------------------------------------------
-console.log("\nTest Suite 7: Releases Section & Distribution Verification");
+console.log("\nTest Suite 7: Interaction Scoping & Animation Anchoring");
+
+const blockIdOf = (node) => {
+  let el = node;
+  while (el) {
+    const id = el.getAttribute ? el.getAttribute("data-block-id") : null;
+    if (id) return id;
+    el = el.parentElement;
+  }
+  return null;
+};
+
+const belongsToCandidate = (candidate, node) => {
+  if (!candidate || !node) return false;
+  const element = candidate.element;
+  if (element) {
+    if (node === element) return true;
+    if (element.children && element.children.includes(node)) return true;
+    if (node.children && node.children.includes(element)) return true;
+  }
+  const nodeBlockId = blockIdOf(node);
+  return !!(candidate.blockId && nodeBlockId && candidate.blockId === nodeBlockId);
+};
+
+// Builds: row > checkbox > (optional) checkmark svg
+const buildRow = (blockId, checked) => {
+  const row = new MockElement("div", { "data-block-id": blockId });
+  const checkbox = new MockElement("div", { role: "checkbox", "aria-checked": checked ? "true" : "false" });
+  row.appendChild(checkbox);
+  if (checked) checkbox.appendChild(new MockElement("svg"));
+  return { row, checkbox };
+};
+
+it("hovering or re-rendering another to-do row cannot fire a ding", () => {
+  const a = buildRow("row-a", false);
+  const b = buildRow("row-b", true); // an unrelated, already-finished task above
+
+  // The user just clicked the checkbox in row A (unchecked -> checked)
+  const candidate = { id: 1, element: a.checkbox, wasChecked: false, blockId: "row-a" };
+
+  assert.strictEqual(belongsToCandidate(candidate, b.checkbox), false,
+    "A mutation inside row B (e.g. hover controls appearing) must be ignored");
+  assert.strictEqual(belongsToCandidate(candidate, b.row), false,
+    "Row B's whole subtree must be ignored");
+  assert.strictEqual(belongsToCandidate(candidate, a.checkbox), true,
+    "Row A's own toggle must still be honoured");
+  assert.strictEqual(belongsToCandidate(candidate, a.row), true,
+    "Row A's block-level mutation must still be honoured");
+});
+
+it("lazily rendered already-ticked tasks (no checkbox interaction) cannot fire a ding", () => {
+  const c = buildRow("row-c", true);
+  assert.strictEqual(belongsToCandidate(null, c.checkbox), false,
+    "With no recorded checkbox interaction the observer must stay silent");
+  assert.strictEqual(belongsToCandidate(null, c.row), false,
+    "Page load / scroll-in rendering must not be mistaken for a completion");
+});
+
+it("un-checking a task is never treated as a completion", () => {
+  const a = buildRow("row-a", true);
+  const candidate = { id: 2, element: a.checkbox, wasChecked: true, blockId: "row-a" };
+
+  // Mirrors the guard order used by the click handler and the MutationObserver
+  const shouldDing = (cand, node) =>
+    belongsToCandidate(cand, node) && !(cand && cand.wasChecked);
+
+  assert.strictEqual(shouldDing(candidate, a.checkbox), false,
+    "Unticking an already checked task must stay silent");
+});
+
+it("animation origin prefers the checkbox anchor captured before the re-render", () => {
+  // Anchor measured on the checkbox at pointerdown; the raw pointer ended on the row text.
+  const candidate = { id: 7, anchor: { x: 86, y: 44 }, element: null };
+  const staleClickCoords = { x: 372, y: 88 };
+
+  const getAnimationPoint = (forInteractionId) => {
+    if (candidate && candidate.anchor && (!forInteractionId || candidate.id === forInteractionId)) {
+      return candidate.anchor;
+    }
+    return staleClickCoords;
+  };
+
+  assert.deepStrictEqual(getAnimationPoint(7), { x: 86, y: 44 },
+    "Should anchor to the checkbox, not the pointer position");
+  assert.deepStrictEqual(getAnimationPoint(9), staleClickCoords,
+    "Unrelated interactions still fall back gracefully");
+});
+
+it("content.js scopes MutationObserver triggers to the interacted row and records a pre-render anchor", () => {
+  const contentJs = fs.readFileSync(path.resolve(__dirname, "../content.js"), "utf8");
+  assert(contentJs.includes("function belongsToCandidate"), "Observer must be scoped to the interacted row");
+  assert(contentJs.includes("function getBlockId"), "Rows must be compared via a stable data-block-id");
+  assert(contentJs.includes("function getCheckboxCenter"), "Checkbox centre helper missing");
+  assert(contentJs.includes("anchor: getCheckboxCenter(target)"), "Anchor must be captured at pointer time");
+  assert(contentJs.includes("function getAnimationPoint"), "Animation origin resolver missing");
+});
+
+// ----------------------------------------------------
+// Test Group 8: Releases Section & CRX / ZIP Distribution Packages
+// ----------------------------------------------------
+console.log("\nTest Suite 8: Releases Section & Distribution Verification");
 
 it("README.md contains the Releases section and links to notion-ding.crx", () => {
   const readme = fs.readFileSync(path.resolve(__dirname, "../README.md"), "utf8");

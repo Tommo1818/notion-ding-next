@@ -103,6 +103,8 @@ The test suite validates:
 - Checkbox detection across native inputs, ARIA elements, and SVG checkmarks.
 - Safe `composedPath()` traversal without throwing unhandled TypeErrors.
 - Debouncing and state transition logic (unchecked -> checked).
+- Interaction scoping: hover controls, lazy rendering, and re-renders of other rows never fire a false ding.
+- Animation anchoring to the checkbox centre measured before React re-renders the row.
 - Release package integrity (CRX3 and ZIP archive headers).
 
 ---

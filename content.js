@@ -229,6 +229,49 @@
     return null;
   }
 
+  // Center point of the small checkbox that belongs to an element (null when unresolvable)
+  function getCheckboxCenter(el) {
+    const checkbox = findActualCheckbox(el);
+    if (checkbox && checkbox.getBoundingClientRect) {
+      const rect = checkbox.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+      }
+    }
+    return null;
+  }
+
+  // Stable identity of the to-do row/block a node lives in.
+  // Notion keeps [data-block-id] on the row root, so this identity survives React
+  // replacing the row's inner nodes while re-rendering.
+  function getBlockId(el) {
+    if (!el || !(el instanceof Element) || !el.closest) return null;
+    const block = el.closest("[data-block-id]");
+    const id = block && block.getAttribute ? block.getAttribute("data-block-id") : null;
+    return id || null;
+  }
+
+  // True only when a mutated node sits inside the exact row the user just interacted with.
+  // This is what keeps the MutationObserver quiet for unrelated DOM churn: Notion's hover
+  // controls and lazily rendered / re-rendered rows (which are frequently already finished).
+  function belongsToCandidate(node) {
+    const candidate = candidateBeforeInteraction;
+    if (!candidate || !(node instanceof Element)) return false;
+
+    const element = candidate.element;
+    if (element instanceof Element) {
+      if (node === element || node.contains(element) || element.contains(node)) {
+        return true;
+      }
+    }
+
+    const nodeBlockId = getBlockId(node);
+    return !!(candidate.blockId && nodeBlockId && candidate.blockId === nodeBlockId);
+  }
+
   // Get center coordinates of target checkbox
   function getElementCenter(el) {
     const now = Date.now();
@@ -237,18 +280,32 @@
       now - lastUserInteractionTime < USER_INTERACTION_WINDOW_MS;
 
     // 1. Locate the actual small checkbox element
-    const checkbox = findActualCheckbox(el);
-    if (checkbox && checkbox.getBoundingClientRect) {
-      const rect = checkbox.getBoundingClientRect();
+    const checkboxCenter = getCheckboxCenter(el);
+    if (checkboxCenter) return checkboxCenter;
+
+    if (el && el.getBoundingClientRect) {
+      const rect = el.getBoundingClientRect();
+
+      // 2. The target itself is already tight around the checkbox
       if (rect.width > 0 && rect.height > 0 && rect.width <= 50) {
         return {
           x: rect.left + rect.width / 2,
           y: rect.top + rect.height / 2
         };
       }
+
+      // 3. Fallback for keyboard toggles on a full to-do block/row:
+      // Notion checkboxes are positioned on the far-left of the to-do block (14px from rect.left)
+      if (rect.width > 0 && rect.height > 0) {
+        const leftOffset = rect.width > 60 ? Math.min(rect.height / 2, 14) : rect.width / 2;
+        return {
+          x: rect.left + leftOffset,
+          y: rect.top + rect.height / 2
+        };
+      }
     }
 
-    // 2. If recent mouse/pointer click coordinates exist and occurred near this block:
+    // 4. Only if the pointer landed inside this element, trust the pointer position
     if (hasRecentClick && el && el.getBoundingClientRect) {
       const blockRect = el.getBoundingClientRect();
       if (
@@ -264,34 +321,13 @@
       }
     }
 
-    // 3. If recent click coordinates exist anywhere within window, use them directly
-    if (hasRecentClick && lastInteractionCoords) {
-      return {
-        x: lastInteractionCoords.x,
-        y: lastInteractionCoords.y
-      };
-    }
-
-    // 4. Fallback for keyboard toggles on full to-do block/row:
-    // Notion checkboxes are positioned on the far-left of the to-do block (14px from rect.left)
-    if (el && el.getBoundingClientRect) {
-      const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        const leftOffset = rect.width > 60 ? Math.min(rect.height / 2, 14) : rect.width / 2;
-        return {
-          x: rect.left + leftOffset,
-          y: rect.top + rect.height / 2
-        };
-      }
-    }
-
     return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
   }
 
-  // Subtle clean ripple animation expanding from the checkbox
-  function spawnRipple(targetEl) {
-    if (!document.body) return;
-    const { x, y } = getElementCenter(targetEl);
+  // Subtle clean ripple animation expanding from a resolved on-screen point
+  function spawnRipple(point) {
+    if (!document.body || !point) return;
+    const { x, y } = point;
 
     const ripple = document.createElement("div");
     ripple.className = "notion-ding-ripple";
@@ -323,10 +359,10 @@
     }, 700);
   }
 
-  // Micro confetti burst around completed checkbox
-  function spawnMicroConfetti(targetEl) {
-    if (!document.body) return;
-    const { x, y } = getElementCenter(targetEl);
+  // Micro confetti burst around a resolved on-screen point
+  function spawnMicroConfetti(point) {
+    if (!document.body || !point) return;
+    const { x, y } = point;
 
     const colors = ["#2383e2", "#0f8558", "#d9730d", "#9065b0", "#e03e3e", "#2eaadc"];
     const particleCount = 12;
@@ -385,6 +421,19 @@
     }, 700);
   }
 
+  // Resolve the exact on-screen point a completion animation should originate from.
+  // The anchor captured at interaction time wins: it was measured on the real checkbox
+  // *before* Notion re-rendered the row, so the burst never drifts onto the row's text.
+  function getAnimationPoint(forInteractionId, triggerElement) {
+    const candidate = candidateBeforeInteraction;
+    if (candidate && candidate.anchor && (!forInteractionId || candidate.id === forInteractionId)) {
+      return candidate.anchor;
+    }
+
+    const target = triggerElement || (candidate ? candidate.element : null);
+    return getCheckboxCenter(target) || getElementCenter(target);
+  }
+
   // Trigger sound, stats update, and animations
   function triggerDing(forInteractionId, triggerElement) {
     const now = Date.now();
@@ -418,12 +467,12 @@
     updateCompletionStats();
 
     // 3. Trigger visual completion animations
-    const target = triggerElement || (candidateBeforeInteraction ? candidateBeforeInteraction.element : null);
+    const point = getAnimationPoint(forInteractionId, triggerElement);
     if (currentAnimStyle === "both" || currentAnimStyle === "ripple") {
-      spawnRipple(target);
+      spawnRipple(point);
     }
     if (currentAnimStyle === "both" || currentAnimStyle === "confetti") {
-      spawnMicroConfetti(target);
+      spawnMicroConfetti(point);
     }
   }
 
@@ -499,7 +548,11 @@
         id: thisId,
         element: target,
         wasChecked: isElementChecked(target),
-        time: Date.now()
+        time: Date.now(),
+        // Measured now, while the checkbox is still on screen untouched by React's
+        // re-render — this is the point the completion animation must originate from.
+        anchor: getCheckboxCenter(target),
+        blockId: getBlockId(target)
       };
     } else {
       candidateBeforeInteraction = null;
@@ -519,18 +572,29 @@
 
       const activeEl = document.activeElement;
       if (activeEl && activeEl instanceof Element) {
-        const cb = activeEl.matches && (
+        let cb = activeEl.matches && (
           activeEl.matches("input[type='checkbox']") ||
           activeEl.matches("[role='checkbox']") ||
           activeEl.matches("[aria-checked]")
         ) ? activeEl : activeEl.querySelector("input[type='checkbox'], [role='checkbox'], [aria-checked]");
+
+        // Notion focuses the editable text, whose checkbox is a *sibling* — climb to the
+        // enclosing row so keyboard toggles are tracked like pointer ones.
+        if (!cb) {
+          const row = activeEl.closest("[data-block-id], .notion-to_do-block, [role='checkbox']");
+          if (row) {
+            cb = findActualCheckbox(row) || row.querySelector("input[type='checkbox'], [role='checkbox'], [aria-checked]");
+          }
+        }
 
         if (cb) {
           candidateBeforeInteraction = {
             id: thisId,
             element: cb,
             wasChecked: isElementChecked(cb),
-            time: Date.now()
+            time: Date.now(),
+            anchor: getCheckboxCenter(cb),
+            blockId: getBlockId(cb)
           };
         }
       }
@@ -557,8 +621,9 @@
     const thisInteractionId = interactionCounter;
 
     if (checkbox) {
-      // If we previously recorded that this element was ALREADY checked, this click will uncheck it
-      if (candidateBeforeInteraction && candidateBeforeInteraction.element === checkbox && candidateBeforeInteraction.wasChecked) {
+      // If the user's pointer went down on something that was ALREADY checked in this same
+      // row, this click can only be un-checking it — never a completion.
+      if (candidateBeforeInteraction && candidateBeforeInteraction.wasChecked && belongsToCandidate(checkbox)) {
         return;
       }
 
@@ -602,6 +667,11 @@
         const target = mutation.target;
         if (target instanceof Element && target.getAttribute("aria-checked") === "true") {
           if (mutation.oldValue !== "true") {
+            // Ignore aria flips on rows the user never touched (lazy rendering of
+            // already-finished tasks, collaborators, hover-driven re-renders, etc.)
+            if (!belongsToCandidate(target)) continue;
+            if (candidateBeforeInteraction && candidateBeforeInteraction.wasChecked) continue;
+
             const specific = findActualCheckbox(target) || target;
             triggerDing(thisInteractionId, specific);
             return;
@@ -621,13 +691,15 @@
             const container = node.closest
               ? node.closest("[role='checkbox'], .notion-to_do-block, [data-block-id]")
               : null;
-            if (container && isElementChecked(container)) {
-              if (candidateBeforeInteraction && candidateBeforeInteraction.element === container && candidateBeforeInteraction.wasChecked) {
-                continue;
-              }
-              triggerDing(thisInteractionId, svgEl || container);
-              return;
-            }
+            if (!container || !isElementChecked(container)) continue;
+
+            // Only a completion inside the row the user actually toggled may ding.
+            // Hovering a task (which re-renders its controls and checkmark) must not.
+            if (!belongsToCandidate(container) && !belongsToCandidate(node)) continue;
+            if (candidateBeforeInteraction && candidateBeforeInteraction.wasChecked) continue;
+
+            triggerDing(thisInteractionId, svgEl || container);
+            return;
           }
         }
       }
