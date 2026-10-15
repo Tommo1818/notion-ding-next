@@ -8,13 +8,24 @@ const RELEASES_DIR = path.join(ROOT_DIR, "releases");
 const STAGING_DIR = path.join(DIST_DIR, "notion-ding");
 const ZIP_OUTPUT = path.join(DIST_DIR, "notion-ding.zip");
 const CRX_OUTPUT = path.join(DIST_DIR, "notion-ding.crx");
-const KEY_FILE = path.join(DIST_DIR, "notion-ding.pem");
+// The .crx signing key is kept OUTSIDE dist/ (which is wiped on every build).
+// A Chrome extension's ID is derived from its signing key, so reusing one key keeps the
+// ID stable: existing .crx installs update in place and keep their stored settings and
+// streaks. A rotating key would install as a separate duplicate extension instead.
+const PERSISTED_KEY_FILE = path.join(ROOT_DIR, "notion-ding.pem");
+const GENERATED_KEY_FILE = path.join(DIST_DIR, "notion-ding.pem");
 
 console.log("=========================================");
 console.log("PACKAGING NOTION DING EXTENSION (.crx & .zip)");
 console.log("=========================================\n");
 
-// 1. Clean & recreate staging and release directories
+// 1. Rescue the signing key before dist/ is wiped, so a rebuild never rotates the key
+if (fs.existsSync(GENERATED_KEY_FILE) && !fs.existsSync(PERSISTED_KEY_FILE)) {
+  fs.copyFileSync(GENERATED_KEY_FILE, PERSISTED_KEY_FILE);
+  console.log("  [OK] Rescued extension signing key from dist/ into notion-ding.pem");
+}
+
+// 2. Clean & recreate staging and release directories
 if (fs.existsSync(DIST_DIR)) {
   fs.rmSync(DIST_DIR, { recursive: true, force: true });
 }
@@ -24,7 +35,7 @@ if (!fs.existsSync(RELEASES_DIR)) {
   fs.mkdirSync(RELEASES_DIR, { recursive: true });
 }
 
-// 2. Files to copy into staging
+// 3. Files to copy into staging
 const filesToCopy = [
   "manifest.json",
   "background.js",
@@ -52,7 +63,7 @@ if (fs.existsSync(assetsSrc)) {
 
 console.log("  [OK] Staged production extension files into dist/notion-ding");
 
-// 3. Create .zip file using PowerShell Compress-Archive
+// 4. Create .zip file using PowerShell Compress-Archive
 console.log("  [..] Creating notion-ding.zip...");
 try {
   execSync(
@@ -70,37 +81,38 @@ try {
   process.exit(1);
 }
 
-// 4. Create .crx file using Chromium/Edge pack-extension if available
+// 5. Create .crx file using Chromium/Edge pack-extension if available
 console.log("  [..] Compiling official .crx Chrome Extension package...");
 const tempUserDataDir = path.join(process.env.TEMP || "C:\\temp", "chromium_pack_temp_ding");
 const edgeExe = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 
 if (fs.existsSync(edgeExe)) {
   try {
-    const existingKey = path.join(ROOT_DIR, "notion-ding.pem");
     let packCmd = `"${edgeExe}" --pack-extension="${STAGING_DIR}" --user-data-dir="${tempUserDataDir}"`;
-    if (fs.existsSync(existingKey)) {
-      packCmd += ` --pack-extension-key="${existingKey}"`;
+    if (fs.existsSync(PERSISTED_KEY_FILE)) {
+      packCmd += ` --pack-extension-key="${PERSISTED_KEY_FILE}"`;
+      console.log("  [OK] Signing with existing notion-ding.pem (extension ID unchanged)");
+    } else {
+      console.log("  [INFO] No signing key found; minting a new one (extension ID will change)");
     }
 
     execSync(packCmd, { stdio: "ignore" });
 
-    const generatedCrx = path.join(DIST_DIR, "notion-ding.crx");
-    const generatedPem = path.join(DIST_DIR, "notion-ding.pem");
-
-    if (fs.existsSync(generatedCrx)) {
-      const crxStats = fs.statSync(generatedCrx);
+    if (fs.existsSync(CRX_OUTPUT)) {
+      const crxStats = fs.statSync(CRX_OUTPUT);
       console.log(`  [OK] Created official notion-ding.crx (${(crxStats.size / 1024).toFixed(1)} KB)`);
 
       // Copy to releases directory
-      fs.copyFileSync(generatedCrx, path.join(RELEASES_DIR, "notion-ding.crx"));
+      fs.copyFileSync(CRX_OUTPUT, path.join(RELEASES_DIR, "notion-ding.crx"));
       console.log("  [OK] Copied notion-ding.crx to releases/ directory");
     } else {
       console.warn("  [WARN] .crx file was not generated at expected path.");
     }
 
-    if (fs.existsSync(generatedPem)) {
-      console.log("  [OK] Generated extension private key (notion-ding.pem)");
+    // A freshly minted key must be stored outside dist/ or the next build would rotate it
+    if (fs.existsSync(GENERATED_KEY_FILE)) {
+      fs.copyFileSync(GENERATED_KEY_FILE, PERSISTED_KEY_FILE);
+      console.log("  [OK] Minted new signing key and stored it as notion-ding.pem - back this file up!");
     }
   } catch (err) {
     console.warn("  [WARN] Chromium pack-extension command failed:", err.message);

@@ -118,3 +118,9 @@ To recompile fresh `.crx` and `.zip` packages at any time:
 npm run package
 ```
 This updates both [`releases/`](releases/) and [`dist/`](dist/).
+
+### Signing Key
+
+The `.crx` signing key lives in `notion-ding.pem` at the repository root and is deliberately **not** committed (see [`.gitignore`](.gitignore)). Keep hold of it: a packaged extension's ID is derived from its signing key, so reusing one key means existing `.crx` installs **update in place** and keep their saved settings and streaks, whereas a new key installs as a separate, duplicate extension instead.
+
+`npm run package` handles this automatically — it reuses `notion-ding.pem`, rescues it out of `dist/` before that folder is wiped, and only mints a new key when none exists yet. Back the file up somewhere safe; a lost key cannot be regenerated, only replaced (which resets the extension ID).
