@@ -18,6 +18,7 @@
   let lastDingTime = 0;
   let comboCount = 0;
   let lastUserInteractionTime = 0;
+  let lastInteractionCoords = null;
   let interactionCounter = 0;
   let lastDingedInteractionId = 0;
   let candidateBeforeInteraction = null;
@@ -175,15 +176,115 @@
     } catch (e) {}
   }
 
+  // Locates the actual small checkbox element (width <= 48px) inside or around a target
+  function findActualCheckbox(el) {
+    if (!el || !(el instanceof Element)) return null;
+
+    // Check if el itself is small like a checkbox
+    if (el.getBoundingClientRect) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.width <= 48 && r.height > 0 && r.height <= 48) {
+        return el;
+      }
+    }
+
+    // Try finding specific checkbox or SVG elements inside el
+    const candidates = [
+      "[role='checkbox']",
+      "input[type='checkbox']",
+      "[aria-checked]",
+      "svg.check",
+      "svg[class*='check']",
+      "svg",
+      ".notion-record-icon",
+      "[data-property-id*='checkbox']"
+    ];
+
+    for (const sel of candidates) {
+      const found = el.querySelector(sel);
+      if (found && found.getBoundingClientRect) {
+        const fr = found.getBoundingClientRect();
+        if (fr.width > 0 && fr.width <= 48) {
+          if (found.tagName && found.tagName.toLowerCase() === "svg" && found.parentElement) {
+            const pr = found.parentElement.getBoundingClientRect();
+            if (pr.width > 0 && pr.width <= 48) return found.parentElement;
+          }
+          return found;
+        }
+      }
+    }
+
+    // Check first children on the left side of the block
+    if (el.children && el.children.length > 0) {
+      let current = el.firstElementChild;
+      while (current) {
+        const cr = current.getBoundingClientRect ? current.getBoundingClientRect() : null;
+        if (cr && cr.width > 0 && cr.width <= 48) {
+          return current;
+        }
+        current = current.firstElementChild;
+      }
+    }
+
+    return null;
+  }
+
   // Get center coordinates of target checkbox
   function getElementCenter(el) {
-    if (!el || !el.getBoundingClientRect) {
-      return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const now = Date.now();
+    const hasRecentClick =
+      lastInteractionCoords &&
+      now - lastUserInteractionTime < USER_INTERACTION_WINDOW_MS;
+
+    // 1. Locate the actual small checkbox element
+    const checkbox = findActualCheckbox(el);
+    if (checkbox && checkbox.getBoundingClientRect) {
+      const rect = checkbox.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0 && rect.width <= 50) {
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+      }
     }
-    const rect = el.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+    // 2. If recent mouse/pointer click coordinates exist and occurred near this block:
+    if (hasRecentClick && el && el.getBoundingClientRect) {
+      const blockRect = el.getBoundingClientRect();
+      if (
+        lastInteractionCoords.y >= blockRect.top - 15 &&
+        lastInteractionCoords.y <= blockRect.bottom + 15 &&
+        lastInteractionCoords.x >= blockRect.left - 20 &&
+        lastInteractionCoords.x <= blockRect.right + 20
+      ) {
+        return {
+          x: lastInteractionCoords.x,
+          y: lastInteractionCoords.y
+        };
+      }
     }
+
+    // 3. If recent click coordinates exist anywhere within window, use them directly
+    if (hasRecentClick && lastInteractionCoords) {
+      return {
+        x: lastInteractionCoords.x,
+        y: lastInteractionCoords.y
+      };
+    }
+
+    // 4. Fallback for keyboard toggles on full to-do block/row:
+    // Notion checkboxes are positioned on the far-left of the to-do block (14px from rect.left)
+    if (el && el.getBoundingClientRect) {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const leftOffset = rect.width > 60 ? Math.min(rect.height / 2, 14) : rect.width / 2;
+        return {
+          x: rect.left + leftOffset,
+          y: rect.top + rect.height / 2
+        };
+      }
+    }
+
     return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
   }
 
@@ -198,13 +299,13 @@
       position: "fixed",
       left: `${x}px`,
       top: `${y}px`,
-      width: "28px",
-      height: "28px",
+      width: "24px",
+      height: "24px",
       borderRadius: "50%",
       border: "2px solid #2eaadc",
-      background: "radial-gradient(circle, rgba(46, 170, 220, 0.25) 0%, rgba(46, 170, 220, 0) 70%)",
+      background: "radial-gradient(circle, rgba(46, 170, 220, 0.3) 0%, rgba(46, 170, 220, 0) 70%)",
       transform: "translate(-50%, -50%) scale(0.4)",
-      opacity: "0.9",
+      opacity: "0.95",
       pointerEvents: "none",
       zIndex: "2147483647",
       transition: "transform 0.65s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 0.65s ease-out"
@@ -213,7 +314,7 @@
     document.body.appendChild(ripple);
 
     requestAnimationFrame(() => {
-      ripple.style.transform = "translate(-50%, -50%) scale(2.6)";
+      ripple.style.transform = "translate(-50%, -50%) scale(2.4)";
       ripple.style.opacity = "0";
     });
 
@@ -228,7 +329,7 @@
     const { x, y } = getElementCenter(targetEl);
 
     const colors = ["#2383e2", "#0f8558", "#d9730d", "#9065b0", "#e03e3e", "#2eaadc"];
-    const particleCount = 14;
+    const particleCount = 12;
     const container = document.createElement("div");
     container.className = "notion-ding-confetti-container";
     Object.assign(container.style, {
@@ -244,7 +345,7 @@
     for (let i = 0; i < particleCount; i++) {
       const p = document.createElement("div");
       const isCircle = i % 2 === 0;
-      const size = 3 + Math.random() * 3;
+      const size = 3 + Math.random() * 2.5;
       const color = colors[i % colors.length];
 
       Object.assign(p.style, {
@@ -252,18 +353,18 @@
         left: "0px",
         top: "0px",
         width: `${size}px`,
-        height: isCircle ? `${size}px` : `${size * 1.5}px`,
+        height: isCircle ? `${size}px` : `${size * 1.4}px`,
         borderRadius: isCircle ? "50%" : "1px",
         backgroundColor: color,
         transform: "translate(-50%, -50%) scale(0)",
         opacity: "1",
-        transition: "transform 0.65s cubic-bezier(0.12, 0.9, 0.35, 1), opacity 0.65s ease-out"
+        transition: "transform 0.6s cubic-bezier(0.12, 0.9, 0.35, 1), opacity 0.6s ease-out"
       });
 
       const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.4;
-      const distance = 20 + Math.random() * 35;
+      const distance = 14 + Math.random() * 22;
       const destX = Math.cos(angle) * distance;
-      const destY = Math.sin(angle) * distance - 8; // slight upward drift
+      const destY = Math.sin(angle) * distance - 6;
       const rotation = (Math.random() - 0.5) * 360;
 
       container.appendChild(p);
@@ -281,7 +382,7 @@
 
     setTimeout(() => {
       if (container.parentElement) container.remove();
-    }, 750);
+    }, 700);
   }
 
   // Trigger sound, stats update, and animations
@@ -367,13 +468,16 @@
       if (node.getAttribute("role") === "checkbox" || node.hasAttribute("aria-checked")) {
         return node;
       }
+      if (node.tagName && node.tagName.toLowerCase() === "svg") {
+        return node;
+      }
       // Notion to-do block or database checkbox cell
       if (
         node.classList &&
         (node.classList.contains("notion-to_do-block") ||
          node.classList.contains("notion-collection-item"))
       ) {
-        const inner = node.querySelector("input[type='checkbox'], [role='checkbox'], [aria-checked]");
+        const inner = node.querySelector("input[type='checkbox'], [role='checkbox'], [aria-checked], svg");
         return inner || node;
       }
     }
@@ -383,6 +487,9 @@
   // Track the start of a user interaction before the DOM state toggles
   function onInteractionStart(event) {
     lastUserInteractionTime = Date.now();
+    if (event.clientX !== undefined && event.clientY !== undefined && (event.clientX > 0 || event.clientY > 0)) {
+      lastInteractionCoords = { x: event.clientX, y: event.clientY };
+    }
     interactionCounter++;
     const thisId = interactionCounter;
 
@@ -443,6 +550,9 @@
   // Method 2: Click event verification
   document.addEventListener("click", (event) => {
     lastUserInteractionTime = Date.now();
+    if (event.clientX !== undefined && event.clientY !== undefined && (event.clientX > 0 || event.clientY > 0)) {
+      lastInteractionCoords = { x: event.clientX, y: event.clientY };
+    }
     const checkbox = findCheckboxTarget(event);
     const thisInteractionId = interactionCounter;
 
@@ -471,7 +581,8 @@
             }
           }
           if (isElementChecked(current)) {
-            triggerDing(thisInteractionId, current);
+            const specific = findActualCheckbox(current) || current;
+            triggerDing(thisInteractionId, specific);
           }
         }, delay);
       }
@@ -491,7 +602,8 @@
         const target = mutation.target;
         if (target instanceof Element && target.getAttribute("aria-checked") === "true") {
           if (mutation.oldValue !== "true") {
-            triggerDing(thisInteractionId, target);
+            const specific = findActualCheckbox(target) || target;
+            triggerDing(thisInteractionId, specific);
             return;
           }
         }
@@ -505,6 +617,7 @@
           const isSvg = node.tagName.toLowerCase() === "svg";
           const hasSvg = isSvg || (node.querySelector && node.querySelector("svg"));
           if (hasSvg) {
+            const svgEl = isSvg ? node : (node.querySelector ? node.querySelector("svg") : node);
             const container = node.closest
               ? node.closest("[role='checkbox'], .notion-to_do-block, [data-block-id]")
               : null;
@@ -512,7 +625,7 @@
               if (candidateBeforeInteraction && candidateBeforeInteraction.element === container && candidateBeforeInteraction.wasChecked) {
                 continue;
               }
-              triggerDing(thisInteractionId, container);
+              triggerDing(thisInteractionId, svgEl || container);
               return;
             }
           }

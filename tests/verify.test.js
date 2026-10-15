@@ -391,6 +391,14 @@ it("content.js contains Web Audio API pre-caching, streak tracking, and animatio
   assert(contentJs.includes("spawnRipple"), "Ripple spawner missing");
   assert(contentJs.includes("spawnMicroConfetti"), "Confetti spawner missing");
   assert(contentJs.includes("updateCompletionStats"), "Stats update missing");
+  assert(contentJs.includes("findActualCheckbox"), "findActualCheckbox function missing");
+});
+
+it("animation origin logic pins to the checkbox element rather than the center of the full-width row", () => {
+  const contentJs = fs.readFileSync(path.resolve(__dirname, "../content.js"), "utf8");
+  assert(contentJs.includes("lastInteractionCoords"), "Should track interaction coordinates for pinpoint accuracy");
+  assert(contentJs.includes("rect.width <= 50"), "Should check for small checkbox dimensions");
+  assert(contentJs.includes("rect.width > 60"), "Should detect wide row blocks and offset to the left");
 });
 
 // ----------------------------------------------------
