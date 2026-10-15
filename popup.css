@@ -1,191 +1,347 @@
 :root {
-  --notion-background-color: rgb(251, 251, 250);
-  --notion-hover-color: rgba(55, 53, 47, 0.08);
-  --notion-active-color: rgba(55, 53, 47, 0.16);
-  --notion-font-color: rgba(55, 53, 47, 0.5);
-  --notion-font-color-dark: rgba(55, 53, 47, 0.65);
+  --bg-color: #ffffff;
+  --text-primary: #37352f;
+  --text-secondary: #787774;
+  --border-color: #e9e9e8;
+  --hover-bg: #efefee;
+  --active-bg: #e3e2e0;
+  --card-bg: #f7f6f5;
+  --accent-color: #2383e2;
+  --accent-hover: #1b6ec2;
+  --success-color: #0f8558;
+  --font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #202020;
+    --text-primary: #ebebeb;
+    --text-secondary: #9b9b9b;
+    --border-color: #2f2f2f;
+    --hover-bg: #2b2b2b;
+    --active-bg: #373737;
+    --card-bg: #262626;
+    --accent-color: #2eaadc;
+    --accent-hover: #48bfe3;
+    --success-color: #2eaadc;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  min-height: auto;
+  width: 300px;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.4;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Restyles for most clickable element */
-#quieter,
-#louder {
-  background-color: var(--notion-background-color);
+.container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.email-input,
-.email-button {
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-color);
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
   background-color: white;
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-#quieter,
-#louder,
-.email-input,
-.email-button {
-  border: 0;
-  border-radius: 5px;
-  color: var(--notion-font-color);
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+/* Stats Card */
+.stats-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stats-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stats-number {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  color: var(--text-primary);
+  min-width: 28px;
+}
+
+.stats-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stats-subtext {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.stats-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background-color: var(--hover-bg);
+  border-radius: 50%;
+}
+
+.stats-badge img {
+  opacity: 0.75;
+}
+
+/* Volume Control Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--hover-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.volume-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background-color: var(--hover-bg);
+  border-color: var(--border-color);
+}
+
+.icon-btn:active:not(:disabled) {
+  background-color: var(--active-bg);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.volume-range {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-color);
+  outline: none;
   cursor: pointer;
 }
 
-#quieter:hover,
-#louder:hover,
-.email-label:hover,
-.email-input:hover,
-.email-button:hover,
-.email-input:hover ~ .email-button {
-  background: var(--notion-hover-color);
+.volume-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease;
 }
 
-#quieter:active,
-#louder:active,
-.email-input:active,
-.email-button:active {
-  background: var(--notion-active-color);
+.volume-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
 }
 
-::placeholder {
-  color: var(--notion-font-color);
-  opacity: 1; /* Firefox */
+.volume-caption {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
-:-ms-input-placeholder {
-  color: var(--notion-font-color);
-}
-
-::-ms-input-placeholder {
-  color: var(--notion-font-color);
-}
-
-/* END restyles */
-
-.volume-controls {
+/* Test Button */
+.test-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px;
-  background: var(--notion-background-color);
 }
 
-.volume-controls > * {
-  margin: 0 5px;
-}
-
-#icon {
-  padding: 4px;
-}
-
-#level-container {
-  display: flex;
-  justify-content: center;
-  min-width: 80px;
-  border-radius: 5px;
-}
-
-#level {
-  font-size: 48px;
-  align-items: center;
-}
-
-#level-decorator {
-  font-size: 16px;
-  font-weight: 300;
-  padding: 8px 0;
-  margin-left: -2px;
-  align-self: flex-end;
-}
-
-.email-container {
-  background-color: white;
-  padding: 8px;
-  border-top: 2px dashed var(--notion-active-color);
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-}
-
-.email-input-container {
-  display: flex;
-  font-size: 14px;
-  align-items: stretch;
-}
-
-.email-container > p {
-  font-size: 9px;
-  margin-top: 2px;
-  color: var(--notion-font-color);
-}
-
-.email-label {
-  display: flex;
-  align-items: center;
-  padding: 6px 8px 7px;
-  margin-right: 8px;
-  border-radius: 5px;
-
-  color: var(--notion-font-color-dark);
-  cursor: default;
-}
-
-.email-label > img {
-  margin-right: 8px;
-}
-
-.email-input {
-  min-height: 34px;
-  min-width: 256px;
+.test-btn {
   width: 100%;
-  padding: 6px 8px 7px;
-  outline: white;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.email-button {
-  padding: 6px 8px 7px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+.test-btn:hover:not(:disabled) {
+  background-color: var(--active-bg);
 }
 
-/* Email input validation */
-.valid.email-input {
-  margin: -1px 0 -1px -1px;
-  border-top: 1px solid #66ff75;
-  border-bottom: 1px solid #66ff75;
-  border-left: 1px solid #66ff75;
+.test-btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
-.valid.email-input ~ .email-button {
-  margin: -1px 0;
-  border-top: 1px solid #66ff75;
-  border-bottom: 1px solid #66ff75;
-  border-right: 1px solid #66ff75;
+.test-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.invalid.email-input {
-  margin: -1px 0 -1px -1px;
-  border-top: 1px solid #ff6666;
-  border-bottom: 1px solid #ff6666;
-  border-left: 1px solid #ff6666;
+.btn-icon {
+  font-size: 14px;
 }
 
-.invalid.email-input ~ .email-button {
-  margin: -1px 0;
-  border-top: 1px solid #ff6666;
-  border-bottom: 1px solid #ff6666;
-  border-right: 1px solid #ff6666;
-}
-/* END Email input validation*/
-
-.email-input:focus:not(:active) {
-  background: white;
-  box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px,
-    rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
+/* Footer */
+.footer {
+  padding-top: 4px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.email-input:focus:not(:active) + .email-button {
-  background: white;
-  box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px,
-    rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--success-color);
+  box-shadow: 0 0 4px rgba(15, 133, 88, 0.4);
+}
+
+.status-text {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.version-tag {
+  font-size: 10px;
+  color: var(--text-secondary);
 }

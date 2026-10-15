@@ -1,0 +1,21 @@
+{
+  "name": "notion-ding",
+  "version": "2.0.0",
+  "description": "Plays a satisfying ding sound whenever you complete a task or check a checkbox in Notion",
+  "main": "background.js",
+  "scripts": {
+    "test": "node tests/verify.test.js",
+    "package": "node scripts/package.js",
+    "build": "node scripts/package.js"
+  },
+  "keywords": [
+    "notion",
+    "chrome-extension",
+    "ding",
+    "sound",
+    "productivity",
+    "todo"
+  ],
+  "author": "",
+  "license": "MIT"
+}
