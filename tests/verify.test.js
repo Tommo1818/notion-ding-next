@@ -365,6 +365,16 @@ it("popup.html has sound themes, animation picker, streaks, and pitch controls",
   assert(popupHtml.includes('id="volume-slider"'), "Volume slider missing");
 });
 
+it("popup.html and popup.js use proper SVG icons and contain no decorative emojis", () => {
+  const popupHtml = fs.readFileSync(path.resolve(__dirname, "../popup.html"), "utf8");
+  const popupJs = fs.readFileSync(path.resolve(__dirname, "../popup.js"), "utf8");
+  const emojiRegex = /[\uD83C-\uDBFF\uDC00-\uDFFF]/;
+  assert(!emojiRegex.test(popupHtml), "popup.html should not contain emojis; use clean SVG icons instead");
+  assert(!emojiRegex.test(popupJs), "popup.js should not contain emojis");
+  assert(popupHtml.includes("<svg class=\"streak-icon\""), "popup.html must use proper SVG streak icon");
+  assert(popupHtml.includes("<span class=\"btn-icon\">"), "popup.html must have btn-icon span");
+});
+
 it("popup.css contains high-contrast dark mode filters for icons and badges", () => {
   const popupCss = fs.readFileSync(path.resolve(__dirname, "../popup.css"), "utf8");
   assert(popupCss.includes("@media (prefers-color-scheme: dark)"), "Dark mode media query missing");

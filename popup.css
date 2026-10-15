@@ -224,7 +224,13 @@ input:checked + .slider:before {
 }
 
 .pill-icon {
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.streak-icon {
+  color: #d9730d;
 }
 
 .text-btn {
@@ -419,7 +425,14 @@ input:checked + .slider:before {
 }
 
 .btn-icon {
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+
+.btn-icon svg {
+  display: block;
 }
 
 /* Footer */
@@ -483,5 +496,9 @@ input:checked + .slider:before {
   .test-btn:hover:not(:disabled) {
     background-color: #353535;
     border-color: #4a4a4a;
+  }
+
+  .streak-icon {
+    color: #f28b24;
   }
 }

@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const pitchToggle = document.getElementById("pitch-toggle");
 
   const VOLUME_CAPTIONS = {
-    0: "Muted 🔇",
+    0: "Muted",
     1: "Subtle (10%)",
     2: "Soft (20%)",
     3: "Low (30%)",
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     7: "Crisp & Clear (70%)",
     8: "Loud (80%)",
     9: "Very Loud (90%)",
-    10: "Maximum (100% 🔊)"
+    10: "Maximum (100%)"
   };
 
   const hasChromeStorage = typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync;

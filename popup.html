@@ -43,7 +43,11 @@
           <strong id="today-counter">0</strong>
         </div>
         <div class="stat-pill" title="Daily completion streak">
-          <span class="pill-icon">🔥</span>
+          <span class="pill-icon">
+            <svg class="streak-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+            </svg>
+          </span>
           <strong id="streak-counter">0-day streak</strong>
         </div>
         <button id="reset-stats-btn" class="text-btn" title="Reset completion counters">Reset</button>
@@ -56,11 +60,11 @@
         <span>Sound Theme</span>
       </div>
       <select id="sound-theme-select" class="select-input">
-        <option value="ding">Classic Ding 🔔</option>
-        <option value="marimba">Marimba Chime 🪵</option>
-        <option value="pop">Subtle Pop 🫧</option>
-        <option value="click">Mechanical Switch ⌨️</option>
-        <option value="zen">Zen Singing Bowl 🧘</option>
+        <option value="ding">Classic Ding</option>
+        <option value="marimba">Marimba Chime</option>
+        <option value="pop">Subtle Pop</option>
+        <option value="click">Mechanical Switch</option>
+        <option value="zen">Zen Singing Bowl</option>
       </select>
     </section>
 
@@ -70,9 +74,9 @@
         <span>Completion Animation</span>
       </div>
       <select id="anim-style-select" class="select-input">
-        <option value="both">Both (Ripple & Confetti ✨)</option>
-        <option value="ripple">Subtle Ripple 🟢</option>
-        <option value="confetti">Micro Confetti 🎊</option>
+        <option value="both">Both (Ripple & Confetti)</option>
+        <option value="ripple">Subtle Ripple</option>
+        <option value="confetti">Micro Confetti</option>
         <option value="none">None (Audio Only)</option>
       </select>
     </section>
@@ -100,14 +104,19 @@
     <section class="options-group">
       <label class="checkbox-option">
         <input type="checkbox" id="pitch-toggle" checked>
-        <span>Chromatic Scale (+1 semitone per combo task 🎵)</span>
+        <span>Chromatic scale (+1 semitone per combo task)</span>
       </label>
     </section>
 
     <!-- Test Audio Button -->
     <section class="test-row">
       <button id="test-sound-btn" class="test-btn" title="Preview the sound theme">
-        <span class="btn-icon">🔔</span>
+        <span class="btn-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+        </span>
         <span>Test Sound</span>
       </button>
     </section>
