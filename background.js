@@ -1,9 +1,23 @@
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.get(["volume", "enabled", "tasksCompleted"], (result) => {
+  const defaults = {
+    volume: 6,
+    enabled: true,
+    tasksCompleted: 0,
+    tasksToday: 0,
+    streakDays: 0,
+    lastActiveDate: "",
+    soundTheme: "ding",
+    animStyle: "both",
+    pitchModulation: true
+  };
+
+  chrome.storage.sync.get(Object.keys(defaults), (result) => {
     const updates = {};
-    if (result.volume === undefined) updates.volume = 6;
-    if (result.enabled === undefined) updates.enabled = true;
-    if (result.tasksCompleted === undefined) updates.tasksCompleted = 0;
+    for (const [key, value] of Object.entries(defaults)) {
+      if (result[key] === undefined) {
+        updates[key] = value;
+      }
+    }
     if (Object.keys(updates).length > 0) {
       chrome.storage.sync.set(updates);
     }

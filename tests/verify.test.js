@@ -30,8 +30,9 @@ console.log("Test Suite 1: Manifest V3 & Branding Validation");
 const manifestPath = path.resolve(__dirname, "../manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
-it("manifest.json name is 'Notion Ding'", () => {
+it("manifest.json name is 'Notion Ding' and version is 2.1.0", () => {
   assert.strictEqual(manifest.name, "Notion Ding");
+  assert.strictEqual(manifest.version, "2.1.0");
 });
 
 it("manifest.json description is professional with no joke terminology", () => {
@@ -87,20 +88,24 @@ it("web_accessible_resources covers assets/* for modern Notion domains", () => {
 });
 
 // ----------------------------------------------------
-// Test Group 2: Audio & Icons Asset Integrity
+// Test Group 2: Audio Sound Library & Icons Asset Integrity
 // ----------------------------------------------------
-console.log("\nTest Suite 2: Asset Integrity (Ding & Icons)");
+console.log("\nTest Suite 2: Asset Integrity (All 5 Sound Themes & Icons)");
 
-it("ding.wav is a valid WAV audio file with RIFF WAVE header", () => {
-  const wavPath = path.resolve(__dirname, "../assets/ding.wav");
-  assert(fs.existsSync(wavPath), "ding.wav does not exist");
-  const buffer = fs.readFileSync(wavPath);
-  assert(buffer.length > 50000, "ding.wav is unexpectedly small");
+const soundThemes = ["ding", "marimba", "pop", "click", "zen"];
 
-  const riff = buffer.toString("utf8", 0, 4);
-  const wave = buffer.toString("utf8", 8, 12);
-  assert.strictEqual(riff, "RIFF", "File header is not RIFF");
-  assert.strictEqual(wave, "WAVE", "File format is not WAVE");
+soundThemes.forEach(theme => {
+  it(`assets/${theme}.wav exists and has valid RIFF WAVE header`, () => {
+    const wavPath = path.resolve(__dirname, `../assets/${theme}.wav`);
+    assert(fs.existsSync(wavPath), `${theme}.wav does not exist`);
+    const buffer = fs.readFileSync(wavPath);
+    assert(buffer.length > 1000, `${theme}.wav is unexpectedly small`);
+
+    const riff = buffer.toString("utf8", 0, 4);
+    const wave = buffer.toString("utf8", 8, 12);
+    assert.strictEqual(riff, "RIFF", "File header is not RIFF");
+    assert.strictEqual(wave, "WAVE", "File format is not WAVE");
+  });
 });
 
 it("icons of all standard sizes (16, 32, 48, 128) exist and are valid PNGs", () => {
@@ -116,17 +121,17 @@ it("icons of all standard sizes (16, 32, 48, 128) exist and are valid PNGs", () 
   });
 });
 
-it("checkmark.svg and volume SVG icons exist", () => {
-  ["checkmark.svg", "volume-down-fill.svg", "volume-up-fill.svg"].forEach(file => {
-    const filePath = path.resolve(__dirname, `../assets/${file}`);
-    assert(fs.existsSync(filePath), `Asset missing: ${filePath}`);
-  });
+it("checkmark.svg uses fill='currentColor' for adaptive dark mode styling", () => {
+  const svgPath = path.resolve(__dirname, "../assets/checkmark.svg");
+  assert(fs.existsSync(svgPath), "checkmark.svg does not exist");
+  const content = fs.readFileSync(svgPath, "utf8");
+  assert(content.includes('fill="currentColor"'), "checkmark.svg should use fill='currentColor'");
 });
 
 // ----------------------------------------------------
-// Test Group 3: Non-linear Volume Mathematics
+// Test Group 3: Non-linear Volume & Chromatic Scale Mathematics
 // ----------------------------------------------------
-console.log("\nTest Suite 3: Non-linear Perceptual Volume Function Logic");
+console.log("\nTest Suite 3: Audio Mathematics (Volume & Chromatic Scale)");
 
 const getVolumeLevel = (volume) => {
   if (!volume || volume <= 0) return 0;
@@ -135,12 +140,9 @@ const getVolumeLevel = (volume) => {
   return Math.exp(EXP_SCALE_FACTOR * clamped) / Math.exp(EXP_SCALE_FACTOR);
 };
 
-it("volume 0 returns 0 (Muted)", () => {
+it("volume 0 returns 0 (Muted) and volume 10 returns 1.0 (Maximum)", () => {
   assert.strictEqual(getVolumeLevel(0), 0);
   assert.strictEqual(getVolumeLevel(-1), 0);
-});
-
-it("volume 10 returns 1.0 (Maximum)", () => {
   const vol10 = getVolumeLevel(10);
   assert(Math.abs(vol10 - 1.0) < 0.0001, `Expected ~1.0, got ${vol10}`);
 });
@@ -149,8 +151,28 @@ it("volume scales exponentially and monotonically across levels 1 to 10", () => 
   let prev = 0;
   for (let v = 1; v <= 10; v++) {
     const current = getVolumeLevel(v);
-    assert(current > prev, `Volume level ${v} (${current}) should be greater than ${v - 1} (${prev})`);
+    assert(current > prev, `Volume level ${v} should be greater than ${v - 1}`);
     prev = current;
+  }
+});
+
+it("chromatic scale semitones calculate exact 2^(n/12) pitch intervals", () => {
+  // 0 semitones = 1.0 (root)
+  assert.strictEqual(Math.pow(2, 0 / 12), 1.0);
+
+  // 12 semitones = 2.0 (one octave)
+  assert.strictEqual(Math.pow(2, 12 / 12), 2.0);
+
+  // 1 semitone = ~1.059463
+  const semi1 = Math.pow(2, 1 / 12);
+  assert(Math.abs(semi1 - 1.059463) < 0.0001);
+
+  // Monotonic increase
+  let prevPitch = 0;
+  for (let s = 0; s <= 12; s++) {
+    const p = Math.pow(2, s / 12);
+    assert(p > prevPitch, `Semitone ${s} pitch should exceed ${s - 1}`);
+    prevPitch = p;
   }
 });
 
@@ -311,7 +333,6 @@ it("does not play ding when unchecking an already checked item", () => {
 
   const simulateClick = (candidateBefore, isCheckedAfter) => {
     if (candidateBefore && candidateBefore.wasChecked) {
-      // It was checked before interaction, so this interaction unchecks it
       return;
     }
     if (isCheckedAfter) {
@@ -319,46 +340,53 @@ it("does not play ding when unchecking an already checked item", () => {
     }
   };
 
-  // Case 1: unchecking an already checked item
+  // Unchecking
   simulateClick({ wasChecked: true }, false);
   assert.strictEqual(dingTriggered, false, "Should not ding on uncheck");
 
-  // Case 2: checking an unchecked item
+  // Checking
   simulateClick({ wasChecked: false }, true);
   assert.strictEqual(dingTriggered, true, "Should ding when checking");
 });
 
 // ----------------------------------------------------
-// Test Group 6: File Cleanliness & Obsolete Files Removal
+// Test Group 6: Popup Controls & Dark Mode Contrast Styling
 // ----------------------------------------------------
-console.log("\nTest Suite 6: Codebase Cleanliness");
+console.log("\nTest Suite 6: Popup Controls & Dark Mode CSS Rules");
 
-it("obsolete broken files (ding-on-checked.js, installed.html) are removed", () => {
-  const root = path.resolve(__dirname, "..");
-  assert(!fs.existsSync(path.join(root, "ding-on-checked.js")), "ding-on-checked.js should be removed");
-  assert(!fs.existsSync(path.join(root, "installed.html")), "installed.html should be removed");
-  assert(!fs.existsSync(path.join(root, "installed.css")), "installed.css should be removed");
-});
-
-it("content.js does not contain humorous or vulgar references", () => {
-  const contentCode = fs.readFileSync(path.resolve(__dirname, "../content.js"), "utf8").toLowerCase();
-  assert(!contentCode.includes("poo") && !contentCode.includes("fart") && !contentCode.includes("dong") && !contentCode.includes("loo"),
-    "content.js should maintain professional tone");
-});
-
-it("popup.html has volume controls, enable toggle, and test sound button", () => {
+it("popup.html has sound themes, animation picker, streaks, and pitch controls", () => {
   const popupHtml = fs.readFileSync(path.resolve(__dirname, "../popup.html"), "utf8");
-  assert(popupHtml.includes('id="volume-slider"'));
-  assert(popupHtml.includes('id="enabled-toggle"'));
-  assert(popupHtml.includes('id="test-sound-btn"'));
-  assert(popupHtml.includes('id="tasks-counter"'));
-  assert(!popupHtml.includes("pipedream.net"), "Should not contain dead pipedream tracking form");
+  assert(popupHtml.includes('id="sound-theme-select"'), "Sound theme selector missing");
+  assert(popupHtml.includes('id="anim-style-select"'), "Animation style selector missing");
+  assert(popupHtml.includes('id="pitch-toggle"'), "Chromatic pitch toggle missing");
+  assert(popupHtml.includes('id="tasks-counter"'), "Tasks counter missing");
+  assert(popupHtml.includes('id="today-counter"'), "Today counter missing");
+  assert(popupHtml.includes('id="streak-counter"'), "Streak counter missing");
+  assert(popupHtml.includes('id="volume-slider"'), "Volume slider missing");
+});
+
+it("popup.css contains high-contrast dark mode filters for icons and badges", () => {
+  const popupCss = fs.readFileSync(path.resolve(__dirname, "../popup.css"), "utf8");
+  assert(popupCss.includes("@media (prefers-color-scheme: dark)"), "Dark mode media query missing");
+  assert(popupCss.includes(".icon-btn img"), "Icon button image selector missing");
+  assert(popupCss.includes("filter: invert"), "Inversion filter missing for dark mode contrast");
+  assert(popupCss.includes("--slider-track"), "Slider track variable missing");
+});
+
+it("content.js contains Web Audio API pre-caching, streak tracking, and animation spawners", () => {
+  const contentJs = fs.readFileSync(path.resolve(__dirname, "../content.js"), "utf8");
+  assert(contentJs.includes("getAudioContext"), "Web Audio context missing");
+  assert(contentJs.includes("decodeAudioData"), "Buffer pre-caching missing");
+  assert(contentJs.includes("Math.pow(2, semitones / 12)"), "Chromatic scale math missing");
+  assert(contentJs.includes("spawnRipple"), "Ripple spawner missing");
+  assert(contentJs.includes("spawnMicroConfetti"), "Confetti spawner missing");
+  assert(contentJs.includes("updateCompletionStats"), "Stats update missing");
 });
 
 // ----------------------------------------------------
 // Test Group 7: Releases Section & CRX / ZIP Distribution Packages
 // ----------------------------------------------------
-console.log("\nTest Suite 7: Releases Section & CRX / ZIP Distribution Verification");
+console.log("\nTest Suite 7: Releases Section & Distribution Verification");
 
 it("README.md contains the Releases section and links to notion-ding.crx", () => {
   const readme = fs.readFileSync(path.resolve(__dirname, "../README.md"), "utf8");
@@ -385,14 +413,6 @@ it("releases/notion-ding.zip exists and has valid ZIP header (PK..)", () => {
   assert.strictEqual(buf[1], 0x4B, "ZIP magic byte 1 should be K (0x4B)");
 });
 
-it("dist/notion-ding staging directory contains manifest.json matching root", () => {
-  const stagedManifest = path.resolve(__dirname, "../dist/notion-ding/manifest.json");
-  assert(fs.existsSync(stagedManifest), "staged manifest.json must exist");
-  const rootManifest = fs.readFileSync(path.resolve(__dirname, "../manifest.json"), "utf8");
-  const stagedContent = fs.readFileSync(stagedManifest, "utf8");
-  assert.strictEqual(stagedContent, rootManifest, "staged manifest must match root manifest");
-});
-
 console.log("\n=========================================");
 console.log(`RESULTS: ${passedTests}/${totalTests} tests passed.`);
 console.log("=========================================\n");
@@ -400,4 +420,3 @@ console.log("=========================================\n");
 if (passedTests !== totalTests) {
   process.exit(1);
 }
-

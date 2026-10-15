@@ -5,17 +5,59 @@
   if (window.__NOTION_DING_INITIALIZED__) return;
   window.__NOTION_DING_INITIALIZED__ = true;
 
-  const DING_AUDIO_URL = chrome.runtime.getURL("assets/ding.wav");
   const DEBOUNCE_INTERVAL_MS = 200;
+  const COMBO_WINDOW_MS = 5000; // 5-second combo window for chromatic pitch scale
   const USER_INTERACTION_WINDOW_MS = 1000;
 
   let currentVolume = 6;
   let isEnabled = true;
+  let currentSoundTheme = "ding";
+  let currentAnimStyle = "both";
+  let usePitchModulation = true;
+
   let lastDingTime = 0;
+  let comboCount = 0;
   let lastUserInteractionTime = 0;
   let interactionCounter = 0;
   let lastDingedInteractionId = 0;
   let candidateBeforeInteraction = null;
+
+  // Web Audio Context & Pre-cached Audio Buffers
+  let audioCtx = null;
+  const audioBuffers = {};
+
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) {
+        audioCtx = new AudioCtxClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  async function loadAudioBuffer(theme) {
+    if (audioBuffers[theme]) return audioBuffers[theme];
+    const ctx = getAudioContext();
+    if (!ctx) return null;
+
+    try {
+      const url = chrome.runtime.getURL(`assets/${theme}.wav`);
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const decoded = await ctx.decodeAudioData(arrayBuffer);
+      audioBuffers[theme] = decoded;
+      return decoded;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Pre-load default sound
+  loadAudioBuffer("ding");
 
   // Exponential volume mapping for natural human hearing perception
   const getVolumeLevel = (volume) => {
@@ -27,38 +69,223 @@
 
   // Sync settings from Chrome storage
   try {
-    chrome.storage.sync.get({ volume: 6, enabled: true }, (items) => {
-      if (items.volume !== undefined) currentVolume = items.volume;
-      if (items.enabled !== undefined) isEnabled = items.enabled;
-    });
+    chrome.storage.sync.get(
+      {
+        volume: 6,
+        enabled: true,
+        soundTheme: "ding",
+        animStyle: "both",
+        pitchModulation: true
+      },
+      (items) => {
+        if (items.volume !== undefined) currentVolume = items.volume;
+        if (items.enabled !== undefined) isEnabled = items.enabled;
+        if (items.soundTheme !== undefined) {
+          currentSoundTheme = items.soundTheme;
+          loadAudioBuffer(items.soundTheme);
+        }
+        if (items.animStyle !== undefined) currentAnimStyle = items.animStyle;
+        if (items.pitchModulation !== undefined) usePitchModulation = items.pitchModulation;
+      }
+    );
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area === "sync") {
         if (changes.volume !== undefined) currentVolume = changes.volume.newValue;
         if (changes.enabled !== undefined) isEnabled = changes.enabled.newValue;
+        if (changes.soundTheme !== undefined) {
+          currentSoundTheme = changes.soundTheme.newValue;
+          loadAudioBuffer(changes.soundTheme.newValue);
+        }
+        if (changes.animStyle !== undefined) currentAnimStyle = changes.animStyle.newValue;
+        if (changes.pitchModulation !== undefined) usePitchModulation = changes.pitchModulation.newValue;
       }
     });
   } catch (e) {}
 
-  function incrementCompletedCount() {
+  // Update daily completion stats and streak
+  function updateCompletionStats() {
     try {
-      chrome.storage.sync.get({ tasksCompleted: 0 }, (res) => {
-        const updated = (res.tasksCompleted || 0) + 1;
-        chrome.storage.sync.set({ tasksCompleted: updated });
-      });
+      chrome.storage.sync.get(
+        { tasksCompleted: 0, tasksToday: 0, streakDays: 0, lastActiveDate: "" },
+        (res) => {
+          const todayStr = new Date().toISOString().split("T")[0];
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+          let tasksToday = (res.tasksToday || 0) + 1;
+          let streakDays = res.streakDays || 1;
+
+          if (res.lastActiveDate === todayStr) {
+            // Already checked a task today
+            streakDays = res.streakDays || 1;
+          } else if (res.lastActiveDate === yesterdayStr) {
+            // Continued streak from yesterday
+            streakDays = (res.streakDays || 0) + 1;
+            tasksToday = 1;
+          } else {
+            // New streak
+            streakDays = 1;
+            tasksToday = 1;
+          }
+
+          chrome.storage.sync.set({
+            tasksCompleted: (res.tasksCompleted || 0) + 1,
+            tasksToday,
+            streakDays,
+            lastActiveDate: todayStr
+          });
+        }
+      );
     } catch (e) {}
   }
 
-  function playSound() {
+  // Play audio with pre-cached Web Audio API and chromatic pitch modulation
+  async function playSound(semitones = 0) {
     if (!isEnabled || currentVolume <= 0) return;
+
+    const playbackRate = Math.pow(2, semitones / 12); // Chromatic semitone: 2^(n/12)
+    const ctx = getAudioContext();
+
+    if (ctx) {
+      const buffer = await loadAudioBuffer(currentSoundTheme);
+      if (buffer) {
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.playbackRate.value = playbackRate;
+
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = getVolumeLevel(currentVolume);
+
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        source.start(0);
+        return;
+      }
+    }
+
+    // Direct Audio fallback
     try {
-      const audio = new Audio(DING_AUDIO_URL);
+      const url = chrome.runtime.getURL(`assets/${currentSoundTheme}.wav`);
+      const audio = new Audio(url);
       audio.volume = getVolumeLevel(currentVolume);
+      audio.playbackRate = playbackRate;
       audio.play().catch(() => {});
     } catch (e) {}
   }
 
-  function triggerDing(forInteractionId) {
+  // Get center coordinates of target checkbox
+  function getElementCenter(el) {
+    if (!el || !el.getBoundingClientRect) {
+      return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    }
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    }
+    return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  }
+
+  // Subtle clean ripple animation expanding from the checkbox
+  function spawnRipple(targetEl) {
+    if (!document.body) return;
+    const { x, y } = getElementCenter(targetEl);
+
+    const ripple = document.createElement("div");
+    ripple.className = "notion-ding-ripple";
+    Object.assign(ripple.style, {
+      position: "fixed",
+      left: `${x}px`,
+      top: `${y}px`,
+      width: "28px",
+      height: "28px",
+      borderRadius: "50%",
+      border: "2px solid #2eaadc",
+      background: "radial-gradient(circle, rgba(46, 170, 220, 0.25) 0%, rgba(46, 170, 220, 0) 70%)",
+      transform: "translate(-50%, -50%) scale(0.4)",
+      opacity: "0.9",
+      pointerEvents: "none",
+      zIndex: "2147483647",
+      transition: "transform 0.65s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 0.65s ease-out"
+    });
+
+    document.body.appendChild(ripple);
+
+    requestAnimationFrame(() => {
+      ripple.style.transform = "translate(-50%, -50%) scale(2.6)";
+      ripple.style.opacity = "0";
+    });
+
+    setTimeout(() => {
+      if (ripple.parentElement) ripple.remove();
+    }, 700);
+  }
+
+  // Micro confetti burst around completed checkbox
+  function spawnMicroConfetti(targetEl) {
+    if (!document.body) return;
+    const { x, y } = getElementCenter(targetEl);
+
+    const colors = ["#2383e2", "#0f8558", "#d9730d", "#9065b0", "#e03e3e", "#2eaadc"];
+    const particleCount = 14;
+    const container = document.createElement("div");
+    container.className = "notion-ding-confetti-container";
+    Object.assign(container.style, {
+      position: "fixed",
+      left: `${x}px`,
+      top: `${y}px`,
+      pointerEvents: "none",
+      zIndex: "2147483647"
+    });
+
+    const particles = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      const p = document.createElement("div");
+      const isCircle = i % 2 === 0;
+      const size = 3 + Math.random() * 3;
+      const color = colors[i % colors.length];
+
+      Object.assign(p.style, {
+        position: "absolute",
+        left: "0px",
+        top: "0px",
+        width: `${size}px`,
+        height: isCircle ? `${size}px` : `${size * 1.5}px`,
+        borderRadius: isCircle ? "50%" : "1px",
+        backgroundColor: color,
+        transform: "translate(-50%, -50%) scale(0)",
+        opacity: "1",
+        transition: "transform 0.65s cubic-bezier(0.12, 0.9, 0.35, 1), opacity 0.65s ease-out"
+      });
+
+      const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.4;
+      const distance = 20 + Math.random() * 35;
+      const destX = Math.cos(angle) * distance;
+      const destY = Math.sin(angle) * distance - 8; // slight upward drift
+      const rotation = (Math.random() - 0.5) * 360;
+
+      container.appendChild(p);
+      particles.push({ el: p, destX, destY, rotation });
+    }
+
+    document.body.appendChild(container);
+
+    requestAnimationFrame(() => {
+      particles.forEach(({ el, destX, destY, rotation }) => {
+        el.style.transform = `translate(${destX}px, ${destY}px) scale(1) rotate(${rotation}deg)`;
+        el.style.opacity = "0";
+      });
+    });
+
+    setTimeout(() => {
+      if (container.parentElement) container.remove();
+    }, 750);
+  }
+
+  // Trigger sound, stats update, and animations
+  function triggerDing(forInteractionId, triggerElement) {
     const now = Date.now();
     if (forInteractionId && forInteractionId === lastDingedInteractionId) {
       return; // Already triggered for this user interaction
@@ -67,16 +294,36 @@
       return; // Global debounce interval
     }
 
+    // Chromatic pitch modulation: advance semitone if within combo window
+    let semitones = 0;
+    if (usePitchModulation) {
+      if (now - lastDingTime < COMBO_WINDOW_MS) {
+        comboCount = (comboCount + 1) % 13; // 0 to 12 semitones
+      } else {
+        comboCount = 0;
+      }
+      semitones = comboCount;
+    }
+
     if (forInteractionId) {
       lastDingedInteractionId = forInteractionId;
     }
     lastDingTime = now;
 
-    // 1. Play the crisp ding sound
-    playSound();
+    // 1. Play audio at calculated pitch
+    playSound(semitones);
 
-    // 2. Increment user completion tally
-    incrementCompletedCount();
+    // 2. Increment stats & streak
+    updateCompletionStats();
+
+    // 3. Trigger visual completion animations
+    const target = triggerElement || (candidateBeforeInteraction ? candidateBeforeInteraction.element : null);
+    if (currentAnimStyle === "both" || currentAnimStyle === "ripple") {
+      spawnRipple(target);
+    }
+    if (currentAnimStyle === "both" || currentAnimStyle === "confetti") {
+      spawnMicroConfetti(target);
+    }
   }
 
   // Determines whether a given DOM element represents a checked checkbox
@@ -188,7 +435,7 @@
     const target = event.target;
     if (target && target instanceof HTMLInputElement && target.type === "checkbox") {
       if (target.checked) {
-        triggerDing(interactionCounter);
+        triggerDing(interactionCounter, target);
       }
     }
   }, { capture: true, passive: true });
@@ -224,7 +471,7 @@
             }
           }
           if (isElementChecked(current)) {
-            triggerDing(thisInteractionId);
+            triggerDing(thisInteractionId, current);
           }
         }, delay);
       }
@@ -244,7 +491,7 @@
         const target = mutation.target;
         if (target instanceof Element && target.getAttribute("aria-checked") === "true") {
           if (mutation.oldValue !== "true") {
-            triggerDing(thisInteractionId);
+            triggerDing(thisInteractionId, target);
             return;
           }
         }
@@ -265,7 +512,7 @@
               if (candidateBeforeInteraction && candidateBeforeInteraction.element === container && candidateBeforeInteraction.wasChecked) {
                 continue;
               }
-              triggerDing(thisInteractionId);
+              triggerDing(thisInteractionId, container);
               return;
             }
           }

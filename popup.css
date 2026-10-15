@@ -3,9 +3,11 @@
   --text-primary: #37352f;
   --text-secondary: #787774;
   --border-color: #e9e9e8;
+  --slider-track: #e5e5e4;
   --hover-bg: #efefee;
   --active-bg: #e3e2e0;
   --card-bg: #f7f6f5;
+  --badge-bg: #efefee;
   --accent-color: #2383e2;
   --accent-hover: #1b6ec2;
   --success-color: #0f8558;
@@ -16,11 +18,13 @@
   :root {
     --bg-color: #202020;
     --text-primary: #ebebeb;
-    --text-secondary: #9b9b9b;
-    --border-color: #2f2f2f;
-    --hover-bg: #2b2b2b;
-    --active-bg: #373737;
-    --card-bg: #262626;
+    --text-secondary: #a8a8a8;
+    --border-color: #383838;
+    --slider-track: #4a4a4a;
+    --hover-bg: #303030;
+    --active-bg: #3c3c3c;
+    --card-bg: #282828;
+    --badge-bg: #363636;
     --accent-color: #2eaadc;
     --accent-hover: #48bfe3;
     --success-color: #2eaadc;
@@ -34,21 +38,21 @@
 }
 
 body {
-  width: 300px;
+  width: 316px;
   background-color: var(--bg-color);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.4;
   user-select: none;
   -webkit-font-smoothing: antialiased;
 }
 
 .container {
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 /* Header */
@@ -71,7 +75,7 @@ body {
 }
 
 .title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.2px;
   line-height: 1.2;
@@ -106,6 +110,7 @@ body {
   background-color: var(--border-color);
   transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 20px;
+  border: 1px solid var(--border-color);
 }
 
 .slider:before {
@@ -113,16 +118,17 @@ body {
   content: "";
   height: 14px;
   width: 14px;
-  left: 3px;
-  bottom: 3px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
   transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 50%;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 input:checked + .slider {
   background-color: var(--accent-color);
+  border-color: var(--accent-color);
 }
 
 input:checked + .slider:before {
@@ -134,7 +140,13 @@ input:checked + .slider:before {
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -143,16 +155,16 @@ input:checked + .slider:before {
 .stats-content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .stats-number {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1;
   color: var(--text-primary);
-  min-width: 28px;
+  min-width: 26px;
 }
 
 .stats-meta {
@@ -175,41 +187,110 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   background-color: var(--hover-bg);
+  border: 1px solid var(--border-color);
   border-radius: 50%;
 }
 
 .stats-badge img {
-  opacity: 0.75;
+  opacity: 0.8;
+  color: var(--text-primary);
 }
 
-/* Volume Control Section */
+/* Stats Extra Row */
+.stats-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--hover-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.pill-label {
+  color: var(--text-secondary);
+}
+
+.pill-icon {
+  font-size: 12px;
+}
+
+.text-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 10px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.15s ease;
+}
+
+.text-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Sections & Form Controls */
 .section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .section-label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .badge {
   font-size: 11px;
   font-weight: 600;
-  background-color: var(--hover-bg);
+  background-color: var(--badge-bg);
+  border: 1px solid var(--border-color);
   padding: 1px 6px;
   border-radius: 4px;
   color: var(--text-primary);
 }
 
+.select-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.select-input:focus {
+  border-color: var(--accent-color);
+}
+
+/* Volume Slider */
 .volume-slider-row {
   display: flex;
   align-items: center;
@@ -217,7 +298,7 @@ input:checked + .slider:before {
 }
 
 .icon-btn {
-  background: transparent;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   width: 28px;
@@ -227,6 +308,10 @@ input:checked + .slider:before {
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn img {
+  opacity: 0.75;
 }
 
 .icon-btn:hover:not(:disabled) {
@@ -248,7 +333,7 @@ input:checked + .slider:before {
   -webkit-appearance: none;
   height: 4px;
   border-radius: 2px;
-  background: var(--border-color);
+  background: var(--slider-track);
   outline: none;
   cursor: pointer;
 }
@@ -260,7 +345,7 @@ input:checked + .slider:before {
   border-radius: 50%;
   background: var(--accent-color);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform 0.1s ease;
 }
 
@@ -274,9 +359,33 @@ input:checked + .slider:before {
   text-align: center;
 }
 
+/* Checkbox Options */
+.options-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.checkbox-option input[type="checkbox"] {
+  accent-color: var(--accent-color);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
 /* Test Button */
 .test-row {
   display: flex;
+  margin-top: 2px;
 }
 
 .test-btn {
@@ -286,18 +395,18 @@ input:checked + .slider:before {
   justify-content: center;
   gap: 6px;
   padding: 8px 12px;
-  background-color: var(--hover-bg);
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   color: var(--text-primary);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
 }
 
 .test-btn:hover:not(:disabled) {
-  background-color: var(--active-bg);
+  background-color: var(--hover-bg);
 }
 
 .test-btn:active:not(:disabled) {
@@ -315,7 +424,7 @@ input:checked + .slider:before {
 
 /* Footer */
 .footer {
-  padding-top: 4px;
+  padding-top: 6px;
   border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -333,7 +442,7 @@ input:checked + .slider:before {
   height: 6px;
   border-radius: 50%;
   background-color: var(--success-color);
-  box-shadow: 0 0 4px rgba(15, 133, 88, 0.4);
+  box-shadow: 0 0 4px rgba(46, 170, 220, 0.4);
 }
 
 .status-text {
@@ -344,4 +453,35 @@ input:checked + .slider:before {
 .version-tag {
   font-size: 10px;
   color: var(--text-secondary);
+}
+
+/* Explicit Dark Mode Overrides for Perfect Contrast */
+@media (prefers-color-scheme: dark) {
+  .icon-btn img {
+    filter: invert(0.92) brightness(1.2);
+  }
+
+  .stats-badge img {
+    filter: invert(0.92) brightness(1.3);
+  }
+
+  .select-input {
+    background-color: #2b2b2b;
+    color: #ebebeb;
+    border-color: #3f3f3f;
+  }
+
+  .select-input:focus {
+    border-color: var(--accent-color);
+  }
+
+  .test-btn {
+    background-color: #2b2b2b;
+    border-color: #3f3f3f;
+  }
+
+  .test-btn:hover:not(:disabled) {
+    background-color: #353535;
+    border-color: #4a4a4a;
+  }
 }
