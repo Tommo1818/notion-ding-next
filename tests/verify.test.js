@@ -3,7 +3,7 @@ const path = require("path");
 const assert = require("assert");
 
 console.log("=========================================");
-console.log("RUNNING NOTION DING VERIFICATION TESTS 🔔");
+console.log("RUNNING NOTION DING NEXT VERIFICATION TESTS 🔔");
 console.log("=========================================\n");
 
 let passedTests = 0;
@@ -30,8 +30,8 @@ console.log("Test Suite 1: Manifest V3 & Branding Validation");
 const manifestPath = path.resolve(__dirname, "../manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
-it("manifest.json name is 'Notion Ding' and version is 2.2.0", () => {
-  assert.strictEqual(manifest.name, "Notion Ding");
+it("manifest.json name is 'Notion Ding Next' and version is 2.2.0", () => {
+  assert.strictEqual(manifest.name, "Notion Ding Next");
   assert.strictEqual(manifest.version, "2.2.0");
 });
 
@@ -506,25 +506,25 @@ it("content.js scopes MutationObserver triggers to the interacted row and record
 // ----------------------------------------------------
 console.log("\nTest Suite 8: Releases Section & Distribution Verification");
 
-it("README.md contains the Releases section and links to notion-ding.crx", () => {
+it("README.md contains the Releases section and links to notion-ding-next.crx", () => {
   const readme = fs.readFileSync(path.resolve(__dirname, "../README.md"), "utf8");
   assert(readme.includes("## Releases & Downloads"), "README must contain the Releases & Downloads section");
-  assert(readme.includes("releases/notion-ding.crx"), "README must link to releases/notion-ding.crx");
-  assert(readme.includes("releases/notion-ding.zip"), "README must link to releases/notion-ding.zip");
+  assert(readme.includes("releases/notion-ding-next.crx"), "README must link to releases/notion-ding-next.crx");
+  assert(readme.includes("releases/notion-ding-next.zip"), "README must link to releases/notion-ding-next.zip");
 });
 
-it("releases/notion-ding.crx exists and has valid CRX3 header (Cr24)", () => {
-  const crxPath = path.resolve(__dirname, "../releases/notion-ding.crx");
-  assert(fs.existsSync(crxPath), "releases/notion-ding.crx must exist");
+it("releases/notion-ding-next.crx exists and has valid CRX3 header (Cr24)", () => {
+  const crxPath = path.resolve(__dirname, "../releases/notion-ding-next.crx");
+  assert(fs.existsSync(crxPath), "releases/notion-ding-next.crx must exist");
   const buf = fs.readFileSync(crxPath);
   assert(buf.length > 50000, "crx file is unexpectedly small");
   const magic = buf.toString("utf8", 0, 4);
   assert.strictEqual(magic, "Cr24", "CRX magic header must be Cr24");
 });
 
-it("releases/notion-ding.zip exists and has valid ZIP header (PK..)", () => {
-  const zipPath = path.resolve(__dirname, "../releases/notion-ding.zip");
-  assert(fs.existsSync(zipPath), "releases/notion-ding.zip must exist");
+it("releases/notion-ding-next.zip exists and has valid ZIP header (PK..)", () => {
+  const zipPath = path.resolve(__dirname, "../releases/notion-ding-next.zip");
+  assert(fs.existsSync(zipPath), "releases/notion-ding-next.zip must exist");
   const buf = fs.readFileSync(zipPath);
   assert(buf.length > 50000, "zip file is unexpectedly small");
   assert.strictEqual(buf[0], 0x50, "ZIP magic byte 0 should be P (0x50)");

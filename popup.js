@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       try {
         Object.entries(updates).forEach(([k, v]) => {
-          localStorage.setItem(`notion_ding_${k}`, String(v));
+          localStorage.setItem(`notion_ding_next_${k}`, String(v));
         });
       } catch (e) {}
     }

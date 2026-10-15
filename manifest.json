@@ -1,5 +1,5 @@
 {
-  "name": "Notion Ding",
+  "name": "Notion Ding Next",
   "description": "Plays a satisfying sound effect whenever you complete a task or check a checkbox in Notion.",
   "version": "2.2.0",
   "manifest_version": 3,
@@ -48,6 +48,6 @@
       "48": "assets/ding-icon.48.png",
       "128": "assets/ding-icon.128.png"
     },
-    "default_title": "Notion Ding - Task Completion Sound"
+    "default_title": "Notion Ding Next - Task Completion Sound"
   }
 }

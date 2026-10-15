@@ -1,5 +1,5 @@
 {
-  "name": "notion-ding",
+  "name": "notion-ding-next",
   "version": "2.2.0",
   "description": "Plays a satisfying ding sound whenever you complete a task or check a checkbox in Notion",
   "main": "background.js",

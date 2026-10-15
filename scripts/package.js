@@ -5,24 +5,24 @@ const { execSync } = require("child_process");
 const ROOT_DIR = path.resolve(__dirname, "..");
 const DIST_DIR = path.join(ROOT_DIR, "dist");
 const RELEASES_DIR = path.join(ROOT_DIR, "releases");
-const STAGING_DIR = path.join(DIST_DIR, "notion-ding");
-const ZIP_OUTPUT = path.join(DIST_DIR, "notion-ding.zip");
-const CRX_OUTPUT = path.join(DIST_DIR, "notion-ding.crx");
+const STAGING_DIR = path.join(DIST_DIR, "notion-ding-next");
+const ZIP_OUTPUT = path.join(DIST_DIR, "notion-ding-next.zip");
+const CRX_OUTPUT = path.join(DIST_DIR, "notion-ding-next.crx");
 // The .crx signing key is kept OUTSIDE dist/ (which is wiped on every build).
 // A Chrome extension's ID is derived from its signing key, so reusing one key keeps the
 // ID stable: existing .crx installs update in place and keep their stored settings and
 // streaks. A rotating key would install as a separate duplicate extension instead.
-const PERSISTED_KEY_FILE = path.join(ROOT_DIR, "notion-ding.pem");
-const GENERATED_KEY_FILE = path.join(DIST_DIR, "notion-ding.pem");
+const PERSISTED_KEY_FILE = path.join(ROOT_DIR, "notion-ding-next.pem");
+const GENERATED_KEY_FILE = path.join(DIST_DIR, "notion-ding-next.pem");
 
-console.log("=========================================");
-console.log("PACKAGING NOTION DING EXTENSION (.crx & .zip)");
-console.log("=========================================\n");
+console.log("==============================================");
+console.log("PACKAGING NOTION DING NEXT EXTENSION (.crx & .zip)");
+console.log("==============================================\n");
 
 // 1. Rescue the signing key before dist/ is wiped, so a rebuild never rotates the key
 if (fs.existsSync(GENERATED_KEY_FILE) && !fs.existsSync(PERSISTED_KEY_FILE)) {
   fs.copyFileSync(GENERATED_KEY_FILE, PERSISTED_KEY_FILE);
-  console.log("  [OK] Rescued extension signing key from dist/ into notion-ding.pem");
+  console.log("  [OK] Rescued extension signing key from dist/ into notion-ding-next.pem");
 }
 
 // 2. Clean & recreate staging and release directories
@@ -61,21 +61,21 @@ if (fs.existsSync(assetsSrc)) {
   fs.cpSync(assetsSrc, assetsDest, { recursive: true });
 }
 
-console.log("  [OK] Staged production extension files into dist/notion-ding");
+console.log("  [OK] Staged production extension files into dist/notion-ding-next");
 
 // 4. Create .zip file using PowerShell Compress-Archive
-console.log("  [..] Creating notion-ding.zip...");
+console.log("  [..] Creating notion-ding-next.zip...");
 try {
   execSync(
     `powershell -Command "Compress-Archive -Path '${STAGING_DIR}\\*' -DestinationPath '${ZIP_OUTPUT}' -Force"`,
     { stdio: "inherit" }
   );
   const zipStats = fs.statSync(ZIP_OUTPUT);
-  console.log(`  [OK] Created notion-ding.zip (${(zipStats.size / 1024).toFixed(1)} KB)`);
+  console.log(`  [OK] Created notion-ding-next.zip (${(zipStats.size / 1024).toFixed(1)} KB)`);
 
   // Copy to releases directory
-  fs.copyFileSync(ZIP_OUTPUT, path.join(RELEASES_DIR, "notion-ding.zip"));
-  console.log("  [OK] Copied notion-ding.zip to releases/ directory");
+  fs.copyFileSync(ZIP_OUTPUT, path.join(RELEASES_DIR, "notion-ding-next.zip"));
+  console.log("  [OK] Copied notion-ding-next.zip to releases/ directory");
 } catch (e) {
   console.error("  [FAIL] Failed to create .zip archive:", e.message);
   process.exit(1);
@@ -91,7 +91,7 @@ if (fs.existsSync(edgeExe)) {
     let packCmd = `"${edgeExe}" --pack-extension="${STAGING_DIR}" --user-data-dir="${tempUserDataDir}"`;
     if (fs.existsSync(PERSISTED_KEY_FILE)) {
       packCmd += ` --pack-extension-key="${PERSISTED_KEY_FILE}"`;
-      console.log("  [OK] Signing with existing notion-ding.pem (extension ID unchanged)");
+      console.log("  [OK] Signing with existing notion-ding-next.pem (extension ID unchanged)");
     } else {
       console.log("  [INFO] No signing key found; minting a new one (extension ID will change)");
     }
@@ -100,11 +100,11 @@ if (fs.existsSync(edgeExe)) {
 
     if (fs.existsSync(CRX_OUTPUT)) {
       const crxStats = fs.statSync(CRX_OUTPUT);
-      console.log(`  [OK] Created official notion-ding.crx (${(crxStats.size / 1024).toFixed(1)} KB)`);
+      console.log(`  [OK] Created official notion-ding-next.crx (${(crxStats.size / 1024).toFixed(1)} KB)`);
 
       // Copy to releases directory
-      fs.copyFileSync(CRX_OUTPUT, path.join(RELEASES_DIR, "notion-ding.crx"));
-      console.log("  [OK] Copied notion-ding.crx to releases/ directory");
+      fs.copyFileSync(CRX_OUTPUT, path.join(RELEASES_DIR, "notion-ding-next.crx"));
+      console.log("  [OK] Copied notion-ding-next.crx to releases/ directory");
     } else {
       console.warn("  [WARN] .crx file was not generated at expected path.");
     }
@@ -112,7 +112,7 @@ if (fs.existsSync(edgeExe)) {
     // A freshly minted key must be stored outside dist/ or the next build would rotate it
     if (fs.existsSync(GENERATED_KEY_FILE)) {
       fs.copyFileSync(GENERATED_KEY_FILE, PERSISTED_KEY_FILE);
-      console.log("  [OK] Minted new signing key and stored it as notion-ding.pem - back this file up!");
+      console.log("  [OK] Minted new signing key and stored it as notion-ding-next.pem - back this file up!");
     }
   } catch (err) {
     console.warn("  [WARN] Chromium pack-extension command failed:", err.message);

@@ -2,8 +2,8 @@
   "use strict";
 
   // Prevent multiple injections on the same page
-  if (window.__NOTION_DING_INITIALIZED__) return;
-  window.__NOTION_DING_INITIALIZED__ = true;
+  if (window.__NOTION_DING_NEXT_INITIALIZED__) return;
+  window.__NOTION_DING_NEXT_INITIALIZED__ = true;
 
   const DEBOUNCE_INTERVAL_MS = 200;
   const COMBO_WINDOW_MS = 5000; // 5-second combo window for chromatic pitch scale
@@ -330,7 +330,7 @@
     const { x, y } = point;
 
     const ripple = document.createElement("div");
-    ripple.className = "notion-ding-ripple";
+    ripple.className = "notion-ding-next-ripple";
     Object.assign(ripple.style, {
       position: "fixed",
       left: `${x}px`,
@@ -367,7 +367,7 @@
     const colors = ["#2383e2", "#0f8558", "#d9730d", "#9065b0", "#e03e3e", "#2eaadc"];
     const particleCount = 12;
     const container = document.createElement("div");
-    container.className = "notion-ding-confetti-container";
+    container.className = "notion-ding-next-confetti-container";
     Object.assign(container.style, {
       position: "fixed",
       left: `${x}px`,

@@ -21,6 +21,6 @@ chrome.runtime.onInstalled.addListener(() => {
     if (Object.keys(updates).length > 0) {
       chrome.storage.sync.set(updates);
     }
-    console.log("[Notion Ding] Initialized default settings.");
+    console.log("[Notion Ding Next] Initialized default settings.");
   });
 });
