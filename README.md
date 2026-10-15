@@ -1,11 +1,33 @@
 # Notion Ding Next
 
-> **A satisfying sound reward for your Notion to-do lists.**  
-> A small browser add-on. Every time you tick a task off in Notion, it plays a quick "ding" so finishing things feels good.
+**A working, maintained version of "Notion Ding" — the browser extension that plays a ding when you tick a task off in Notion — rebuilt for the Notion of today, with a pile of new features on top.**
+
+The original (`lucasdellabella/notion-ding`) described itself as *"Goes ding when you check a notion checkbox. That's it."* Then it stopped working: Notion moved to new domains and rewrote its interface, and the extension was never updated. It has been broken and unmaintained ever since, and is no longer available on the Chrome Web Store.
+
+**Notion Ding Next picks up where it left off.** Same idea, working again — and, unlike the original, it's configurable: five sounds, volume control, completion animations, combo pitch, and productivity stats.
+
+> **Almost all of this project was written by large language models** — the code, tests, build scripts, sound synthesis and documentation. A human directs and reviews it, but the writing is done by LLMs. See [How this was built](#how-this-was-built) below.
 
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue.svg)](manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests Passing](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](tests/verify.test.js)
+
+---
+
+## What's different from the original
+
+| | Original Notion Ding | Notion Ding Next |
+| :--- | :--- | :--- |
+| **Status** | Broken and abandoned. Also no longer on the Chrome Web Store. | Maintained, currently **v2.3.0** |
+| **Domains** | Only ran on `notion.so` — a domain Notion has moved away from | Works on `notion.com`, `notion.site` and `notion.so` |
+| **Today's Notion interface** | Not supported. Its complete-detection targeted markup Notion no longer renders, and it threw an error while handling clicks | Rewritten detection that handles Notion's current markup, ARIA checkboxes and React re-renders |
+| **Sound** | One ding, no options | 5 sound themes, 0–10 volume, optional combo pitch that climbs a musical scale |
+| **Completion animations** | None | A ripple on the checkbox, or micro confetti, or both |
+| **Statistics** | None | All-time total, today's count, and a daily streak |
+| **Appearance** | — | Adapts to Notion's light and dark themes, with a high-contrast popup |
+| **Settings** | "That's it" — nothing to configure | A settings popup for sound, volume, animations, pitch and stats |
+
+If you're here because the old extension stopped working, jump to [Why the original stopped working](#why-the-original-notion-ding-stopped-working). If you just want it installed, start at [Install Notion Ding Next](#install-notion-ding-next).
 
 ---
 
@@ -67,6 +89,10 @@ Notion Ding Next isn't in the Chrome Web Store, so you add it to your browser yo
 
 > **Please keep the unzipped folder where it is.** Your browser loads the add-on from that folder each time it starts. If you move or delete the folder, Notion Ding Next stops working and you'll need to repeat steps 2 and 3. (Once you remove the add-on, you can delete the folder.)
 
+### Upgrading from the original Notion Ding
+
+You don't need to do anything special. This is a separate add-on with its own name, so install it with the steps above, then remove the old "Notion Ding" entry from `chrome://extensions` if it's still listed — leaving both installed means two dings per task.
+
 ### If you were given the `.crx` file instead
 
 The CRX is a single-file version of the same add-on. It's quicker when it works, but newer versions of Chrome (127 and later) usually refuse to install it, showing a message like *"This extension is not listed in the Chrome Web Store."* If you see that, don't fight it — just follow steps 1 to 4 above with the ZIP file instead. The add-on is identical either way.
@@ -86,7 +112,7 @@ If your browser does accept it:
 | *"This extension is not listed in the Chrome Web Store"* | You're using the **CRX** file. Newer Chrome versions don't allow that. Use the ZIP file with steps 1 to 4 instead. |
 | *"Manifest file is missing or unreadable"* | The wrong folder was picked. The folder you choose must have `manifest.json` directly inside it — open it and check. |
 | No sound when you tick a task | Refresh the Notion tab (`F5`). Then click the Notion Ding Next icon and check that the volume isn't at 0 and the add-on isn't switched off. It only works on `notion.so`, `notion.com` and `notion.site` pages. |
-| You hear two dings at once | An older copy is still installed. On the extensions page, remove the duplicate **Notion Ding Next** entry (see below). |
+| You hear two dings at once | An older copy is still installed — most likely the original "Notion Ding". On the extensions page, remove the extra entry. |
 | No icon appears in the toolbar | The add-on is still working. Click the puzzle-piece icon in the toolbar, then click the pin next to **Notion Ding Next** to keep its icon visible. |
 | It worked yesterday but not today | If you installed from the ZIP, the unzipped folder has probably been moved or deleted. Repeat steps 2 and 3, and don't move the folder afterwards. |
 
@@ -99,6 +125,8 @@ If your browser does accept it:
 ---
 
 ## Features
+
+Everything below is on top of what the original did — it played one sound and had nothing to configure.
 
 ### Sound Themes & Library
 Choose from 5 clean, distinct audio rewards in the popup:
@@ -117,6 +145,9 @@ Celebrate completing tasks directly on your Notion page:
 - **Micro Confetti**: A minimal, elegant burst of 12 colorful particles that gently drift and disperse.
 - **Customizable**: Choose between *Both*, *Ripple Only*, *Confetti Only*, or *Audio Only* in the popup settings.
 
+### Volume Control
+A 0–10 slider with natural, non-linear scaling, so low settings really are quiet and high ones really are loud. Level 0 is silent.
+
 ### Daily Streaks & Productivity Statistics
 - **All-Time Total**: Tracks every task you've completed.
 - **Today's Count**: Keeps count of tasks completed today.
@@ -130,17 +161,41 @@ Pre-caches decoded audio buffers into memory using the browser's Web Audio API (
 - Automatically adapts to your system/Notion theme.
 - **High-contrast Dark Mode**: Custom styled SVG icons, slider tracks, badges, and cards engineered for crystal-clear readability against dark backgrounds.
 
+### Reliable Completion Detection
+- **No phantom dings**: only the task you actually ticked sets off a sound. Hovering a task, scrolling past, or showing already-finished tasks stays silent.
+- **Accurate animation placement**: the ring and the confetti start on the checkbox itself, even when Notion re-renders the row mid-click.
+- **Keyboard friendly**: ticking with `Cmd` / `Ctrl` + `Enter` behaves exactly like clicking.
+
 ---
 
-## Why the Original "Notion Ding" Stopped Working
+## Why the original Notion Ding stopped working
 
-If you used the original `lucasdellabella/notion-ding` extension, it broke due to:
-1. **Notion's Domain Migration**: Transition from `notion.so` to `notion.com` and `notion.site`.
-2. **DOM Architecture Overhaul**: Migration to StyleX CSS modules and ARIA attributes (`[role="checkbox"]`, `aria-checked`), removing legacy `.check` CSS classes and native `<input>` elements in many views.
+If you used the original `lucasdellabella/notion-ding` extension, it broke for four reasons:
+
+1. **Notion's Domain Migration**: Transition from `notion.so` to `notion.com` and `notion.site`. The original only ran on `notion.so`, so it stopped loading on most pages.
+2. **DOM Architecture Overhaul**: Migration to StyleX CSS modules and ARIA attributes (`[role="checkbox"]`, `aria-checked`), removing the legacy `.check` CSS classes and native `<input>` elements that the original looked for.
 3. **Unhandled DOM Exception**: The original script threw `TypeError: element.matches is not a function` during `composedPath()` traversal.
 4. **Manifest V3 Web Accessible Resources**: Modern Chrome extensions strictly enforce explicit resource matching in Manifest V3.
 
-**Notion Ding Next** resolves all of these issues with a multi-layered event engine, React reconciliation handling, and modern Manifest V3 compliance.
+None of these were ever fixed, so the extension has been dead since — and it is no longer published on the Chrome Web Store. **Notion Ding Next** resolves all four with a multi-layered event engine, React reconciliation handling, and modern Manifest V3 compliance, and this is where the project continues.
+
+---
+
+## How this was built
+
+Almost every line in this repository was written by large language models, working under human direction. The human maintainer decides what the extension should do, reviews the output, runs the tests and ships it — but the writing is done by LLMs.
+
+Concretely:
+
+- **The extension code**: `content.js`, `background.js`, the popup (`popup.html`, `popup.css`, `popup.js`) and `manifest.json` were generated by LLMs — including the rewrite of completion detection, the animations, the settings UI, the Manifest V3 migration and the bug fixes shipped in v2.2.0.
+- **The tests**: `tests/verify.test.js` is LLM-written in full, behavioural scenarios included.
+- **The build tooling**: `scripts/package.js` and `scripts/generate_sounds.js` are LLM-written. The five sound themes are not recorded audio — that script synthesises them numerically into WAV files.
+- **The release packages**: `releases/notion-ding-next.crx` and `.zip` are assembled by that same LLM-written tooling.
+- **The documentation**: this README, and the commit messages in the project's recent history.
+
+What that means in practice: the code has been read by a human and is exercised by the test suite, but it does not carry the assurance of a long-lived, heavily battle-tested codebase. If something misbehaves, [open an issue](https://github.com/Tommo1818/notion-ding-next/issues) — that is the most useful contribution you can make.
+
+What predates the LLM work: the original idea, and the `lucasdellabella/notion-ding` extension this project replaces.
 
 ---
 
