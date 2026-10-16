@@ -115,3 +115,14 @@ npm run package # rebuild releases/ and dist/
 ```
 
 Keep `notion-ding-next.pem` (repo root, deliberately not committed): the extension ID is derived from it, so reusing it means existing `.crx` installs **update in place** and keep their settings and streaks. `npm run package` reuses it automatically, rescues it out of `dist/` before wiping that folder, and only mints a new key when none exists. Back the file up — a lost key can't be regenerated, only replaced, which resets the ID.
+
+---
+
+## Support this project
+
+Notion Ding Next is free, and no features are held back behind a payment. If you'd like to say thanks:
+
+- **Ko-fi** — [ko-fi.com/tom146595](https://ko-fi.com/tom146595) (one-off or monthly)
+- **PayPal** — [paypal.com/paypalme/tomvern](https://www.paypal.com/paypalme/tomvern)
+
+Entirely optional, and much appreciated.

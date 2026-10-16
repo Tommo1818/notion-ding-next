@@ -1,0 +1,7 @@
+# Funding links for the "Sponsor" button on the repository page.
+# Docs: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+#
+# Ko-fi has first-class support here, so it gets the native key.
+ko_fi: tom146595
+# PayPal has no native key; it goes in `custom`. URLs containing a colon must be quoted.
+custom: ["https://www.paypal.com/paypalme/tomvern"]
